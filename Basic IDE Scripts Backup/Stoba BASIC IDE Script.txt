@@ -1,0 +1,483 @@
+Rem --- eWON start section: Cyclic Section
+Rem --- eWON user (start)
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Cyclic Section
+Rem --- eWON start section: Init Section
+eWON_init_section:
+Rem --- eWON user (start)
+//upper_soc = 95
+//lower_soc = 13
+//DUOS_Limit = 23
+//DUOS_Limit = 23
+//desired_soc = 50
+min_soc = 0
+PCS_FAULT_FLAG% = 0
+charge_50% = 0
+discharge_50% = 0
+duos_running% = 0
+duos_charge% = 0
+duos_started% = 0
+//duos_finished% = 1
+faults1% = 0
+faults2% = 0
+faults3% = 0
+HOUR$ = "0"
+MINUTE$ = "0"
+DAY_1$ = "0"
+MONTH_1$ = "0"
+YEAR_1$ = "0"
+upper_limit_reached% = 0
+lower_limit_reached% = 0
+email_sent_UPS% = 0
+start_email_timer% = 0
+email_warning% = 0
+UPS_email_customer% = 0
+ftp_counter% = 1
+NL$ = (CHR$(13)+CHR$(10))
+NP$ = NL$ + NL$   
+//E1$ = "tom.csmith@powerstar.com;solon.mardapittas@powerstar.com;andrew.haynes@powerstar.com"
+E1$ = "Sheeran.chen@powerstar.com"
+E2$ = "sheeranchen@gmail.com"
+//E2$ = "powersupply@stobauk.com"
+//E2$ = "Matthew.Chart@stobauk.com;Stuart.Packham@stobauk.com;brian.bliss@stobauk.com;Steve.Letailleur@stobauk.com;K.Chart@stobauk.com;Lee.Christian@stobauk.com;S.Green@stobauk.com;Markus.Krizsmann@stobauk.com;Chris.Dossett@stobauk.com;"
+//E2$ = E2$ + "@stobauk.com;james.harbottle@stobauk.com;Cnimmo@stobauk.com;robert.stanislawski@stobauk.com;Craig.Hunter@stobauk.com;craig.thetford@stobauk.com;jakub.bogacki@stobauk.com;P.McCourt@stobauk.com;"
+//E2$ = E2$ + "robert.conroy-smith@stobauk.com"
+TSET 1,1
+TSET 2,1
+TSET 3,2
+TSET 4,3
+//ONCHANGE "EMS_SoC_1","goto ups_alert"
+//ONCHANGE "EMS_System_Status","goto ups_alert"
+//ONDATE 4,"1 0 * * MON","ftp_counter% = 1"//"GOTO SendData" // Every Sunday at 11:50 PM
+//ONDATE 5,"1 0 * * MON","goto SendAllData"
+//ONDATE 4,"* * * * *","ftp_counter% = 1" // Every minute
+ONDATE 5,"34 23 * * *","goto SendAllData"
+ONTIMER 1, "goto ups_alert"
+//ONTIMER 2, "goto duos"
+//ONTIMER 2, "goto duos"
+//ONTIMER 2, "goto Email_Check"
+//ONTIMER 3, "goto Faults_Calc"
+//ONTIMER 4, "goto Check_PCS_VSG"
+//Goto "test123"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Init Section
+Rem --- eWON start section: SoC Limits
+Rem --- eWON user (start)
+SoC_Limit:
+IF ((EMS_SoC_1@ >= upper_soc) OR (EMS_SoC_2@ >= upper_soc) OR (EMS_SoC_3@ >= upper_soc)) THEN
+	upper_limit_reached% = 1
+ENDIF
+IF ((EMS_SoC_1@ <= lower_soc) OR (EMS_SoC_2@ <= lower_soc) OR (EMS_SoC_3@ <= lower_soc)) THEN
+	lower_limit_reached% = 1
+ENDIF
+IF ((upper_limit_reached% > 0) AND (EMS_Power_Setpoint@ < 0)) THEN
+  discharge_50% = 1
+  charge_50% = 0
+  EMS_Power_Setpoint@ = 0
+  Print "Charge Stopped"  
+ENDIF
+ 
+ 
+IF ((lower_limit_reached% > 0) AND (EMS_Power_Setpoint@ > 1)) THEN
+  charge_50% = 1
+  discharge_50% = 0
+  EMS_Power_Setpoint@ = 0
+  Print "Discharge Stopped"
+ENDIF
+IF (lower_limit_reached% > 0) THEN
+	charge_50% = 1
+	discharge_50% = 0
+	lower_limit_reached% = 0
+  Print "lower drift"
+ENDIF
+IF (upper_limit_reached% > 0) THEN
+	discharge_50% = 1
+	charge_50% = 0
+	upper_limit_reached% = 0
+  Print "upper drift"
+ENDIF
+IF (discharge_50% > 0) THEN
+	IF ((EMS_SoC_1@ <= desired_soc) OR (EMS_SoC_2@ <= desired_soc) OR (EMS_SoC_3@ <= desired_soc)) THEN
+		EMS_Power_Setpoint@ = 0
+		discharge_50% = 0
+		Print "Discharge Finished"
+	ELSE
+		EMS_Power_Setpoint@ = 1000
+    Print "Safety Discharge"
+	ENDIF
+ENDIF
+IF (charge_50% > 0) THEN
+	IF ((EMS_SoC_1@ >= desired_soc) OR (EMS_SoC_2@ >= desired_soc) OR (EMS_SoC_3@ >= desired_soc)) THEN
+		EMS_Power_Setpoint@ = 0
+		charge_50% = 0
+		Print "Charge Finished"    
+	ELSE
+	EMS_Power_Setpoint@ = -1000
+    Print "Safety Charge"
+	ENDIF
+ENDIF
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: SoC Limits
+Rem --- eWON start section: UPS Check
+Rem --- eWON user (start)
+ups_alert:
+UPS_Mode@ = EMS_Microgrid_Status@
+//UPS_Mode@ = UPS_Mode_J@
+  min_soc = PLC_SoC_A@
+  IF PLC_SoC_B@ < min_soc THEN
+    min_soc = PLC_SoC_B@
+  ENDIF
+Goto "Email_Check"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: UPS Check
+Rem --- eWON start section: UPS_Email Check
+Rem --- eWON user (start)
+Email_Check:
+//E-MAIL Alerts
+IF UPS_MODE@ THEN
+  IF (UPS_email_customer% = 0) THEN
+    UPS_email_customer% = 1
+    @send_email_cust(UPS_email_customer%) 
+    out1@ = 1
+    out2@ = 0
+    Print "ups siren on"
+    //@send_sms(UPS_email_customer%)
+  ENDIF  
+  
+  IF NOT(email_sent_UPS%) THEN
+    email_sent_UPS% = 1
+    @send_email_eng()
+  ENDIF
+  
+  IF((email_warning% = 0) AND ((PLC_SoC_A@ <= 15) OR (PLC_SoC_B@ <= 15))) THEN  
+    email_warning% = 1
+    out1@ = 0
+    out2@ = 1
+    Print "low ups siren on"
+    @send_warning()
+   ENDIF
+ENDIF
+IF NOT(UPS_MODE@) THEN
+    email_warning% = 0
+    email_sent_UPS% = 0
+    start_email_timer% = 0    
+    IF (UPS_email_customer% = 1) THEN
+      UPS_email_customer% = 0
+      //@send_email_cust(UPS_email_customer%)    
+      out1@ = 0
+      out2@ = 0
+      Print "both siren off"
+   //   @send_sms(UPS_email_customer%)
+    ENDIF
+ENDIF
+IF email_sent_UPS% THEN
+  IF start_email_timer% = 0 THEN
+    start_email_timer% = 1
+    time_save% = GETSYS PRG, "TIMESEC"
+  ENDIF
+    
+  IF start_email_timer% = 1 THEN
+    current_time% = GETSYS PRG, "TIMESEC"
+    IF ((current_time% - time_save%) >= (5 * 60)) THEN
+      start_email_timer% = 0
+      email_sent_UPS% = 0
+      @send_email_eng()
+    ENDIF
+  ENDIF
+ENDIF
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: UPS_Email Check
+Rem --- eWON start section: e-mail
+Rem --- eWON user (start)
+// 5 Minute info
+FUNCTION send_email_eng  
+  @TIME_TO_STRING()
+  Print "Sending e-mail"
+  avg_soc = (PLC_SoC_A@ + PLC_SoC_B@) / 2
+  IF (Acuvim_Load_Active_Power@ > 0) THEN    
+    meter_float = Acuvim_Load_Active_Power@
+  ELSE    
+    meter_float = 1
+  ENDIF
+  ups_time% = (900 * 60 * (avg_soc / 100) * 0.75) / meter_float
+  M2$ = SFMT ups_time%,30,0,"%1d"  
+  M3$ = SFMT meter_float,20,4,"%f"
+  Print avg_soc
+  SOC$ =  SFMT avg_soc,20,4,"%f"
+  
+  M1$ = "Virtue UPS Mode Alert" + NL$ + "UPS Mode: Activated" + NP$ + "You have around "  
+  M1$ = M1$ + M2$ + " minutes of power left at the current load of " + M3$ + " kW"
+  M1$ = M1$ + NP$ + "State of Charge is: " + SOC$ + "%" + NP$
+  
+  M1$ = M1$ + "TIME : " + HOUR$ + ":" + MINUTE$ + NL$ + "DATE : " + DAY_1$ + "/" + MONTH_1$ + "/" + YEAR_1$
+   
+  Message$ = M1$   
+ 
+  //SENDMAIL E1$, E2$;E3$, "Virtue UPS Mode Alert", Message$
+  SENDMAIL E1$,E2$,"Virtue UPS Mode Alert", Message$
+//  SENDMAIL E2$,"","Virtue UPS Mode Alert", Message$
+  Print"Engineer email sent"
+ENDFN
+// Back to normal
+FUNCTION send_email_cust($ups_mode%) 
+  @TIME_TO_STRING()
+  Mes1$ = "Virtue Customer Notification" + NP$ + "UPS "
+  Mes2$ = ""
+  IF($ups_mode% = 0) THEN
+    Mes2$ = "Deactivated. Mains Power restored"+ NP$ + "System status: Standby"
+  ELSE
+    Mes2$ = "Activated, Facility running on batteries" + NP$ + "System status: Running"
+  ENDIF  
+  
+  Msg$ = Mes1$ + Mes2$ + NP$
+  
+  Msg$ = Msg$ + "TIME : " + HOUR$ + ":" + MINUTE$ + NL$ + "DATE : " + DAY_1$ + "/" + MONTH_1$ + "/" + YEAR_1$
+  
+  //SENDMAIL E1$, E2$, "Virtue UPS Mode Alert", Msg$
+  SENDMAIL E1$,E2$,"Virtue UPS Mode Alert", Msg$
+  //SENDMAIL E2$,"", "Virtue UPS Mode Alert", Msg$
+  Print"Customer email sent"
+ENDFN
+// Critical Battery Warning
+FUNCTION send_warning()     
+  @TIME_TO_STRING()
+  
+  SOC$ =  SFMT min_soc,20,4,"%f" 
+  
+  M1$ = "Virtue UPS Mode Alert" + NL$ + "Battery Low Warning" + NP$   
+  M1$ = M1$ + NP$ + "State of Charge is: " + SOC$ + "%"   
+  MW$ = "Recommended Action: Shut down critical applications"
+  M1$ = M1$ + NP$ + MW$ + NP$
+  M1$ = M1$ + "TIME : " + HOUR$ + ":" + MINUTE$ + NL$ + "DATE : " + DAY_1$ + "/" + MONTH_1$ + "/" + YEAR_1$
+  Message$ = M1$
+ 
+  //SENDMAIL E1$,E2$, "Virtue UPS CRITICAL BATTERY WARNING", Message$
+  SENDMAIL E1$,E2$,"Virtue UPS CRITICAL BATTERY WARNING", Message$
+  //SENDMAIL E2$,"", "Virtue UPS CRITICAL BATTERY WARNING", Message$
+  Print"15% Warning email sent"
+ENDFN
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: e-mail
+Rem --- eWON start section: FTP
+Rem --- eWON user (start)
+SendData:
+T$ = Time$
+year$ = T$(7 To 10)
+mon$ = T$(4 To 5)
+date$ = T$(1 To 2)
+hour$ = T$(12 To 13)
+min$ = T$(15 To 16)
+sec$ = T$(18 To 19)
+IF ftp_counter% = 2 THEN
+  File1$ = "Stoba/SoC_1-" + date$ + "-" + mon$ + "-" + year$ + ".csv"
+  PUTFTP File1$,"[$dtHL $ftT $st_d7 $et_s0 $tnEMS_SoC_1]"
+  Print "FTP 1"
+ENDIF
+IF ftp_counter% = 3 THEN
+  File2$ = "Stoba/SoC_2-" + date$ + "-" + mon$ + "-" + year$ + ".csv"
+  PUTFTP File2$,"[$dtHL $ftT $st_d7 $et_s0 $tnEMS_SoC_2]"
+  Print "FTP 2"
+ENDIF
+IF ftp_counter% = 4 THEN
+  File3$ = "Stoba/SoC_3-" + date$ + "-" + mon$ + "-" + year$ + ".csv"
+  PUTFTP File3$,"[$dtHL $ftT $st_d7 $et_s0 $tnEMS_SoC_3]"
+  Print "FTP 3"
+ENDIF
+IF ftp_counter% = 5 THEN
+  File4$ = "Stoba/Meter_Supply_Vph1-" + date$ + "-" + mon$ + "-" + year$ + ".csv"
+  PUTFTP File4$,"[$dtHL $ftT $st_d7 $et_s0 $tnMeter_Supply_Vph1]"
+  Print "FTP 4"
+ENDIF
+IF ftp_counter% = 6 THEN
+  File5$ = "Stoba/Meter_Supply_Act_Power-" + date$ + "-" + mon$ + "-" + year$ + ".csv"
+  PUTFTP File5$,"[$dtHL $ftT $st_d7 $et_s0 $tnMeter_Supply_Active_Power]"
+  Print "FTP 5"
+ENDIF
+IF ftp_counter% = 7 THEN
+  File6$ = "Stoba/Meter_Load_Act_Power-" + date$ + "-" + mon$ + "-" + year$ + ".csv"
+  PUTFTP File6$,"[$dtHL $ftT $st_d7 $et_s0 $tnMeter_Load_Active_Power]"
+  Print "FTP 6"
+ENDIF
+IF ftp_counter% = 8 THEN
+  File7$ = "Stoba/BMS_Current-" + date$ + "-" + mon$ + "-" + year$ + ".csv"
+  PUTFTP File7$,"[$dtHL $ftT $st_d7 $et_s0 $tnBMS_Current]"
+  Print "FTP 7"
+ENDIF
+IF ftp_counter% = 9 THEN
+  File7$ = "Stoba/PCS_Act_P-" + date$ + "-" + mon$ + "-" + year$ + ".csv"
+  PUTFTP File7$,"[$dtHL $ftT $st_d7 $et_s0 $tnPCS_T_Pact]"
+  Print "FTP 8"
+ENDIF
+ 	
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: FTP
+Rem --- eWON start section: FTP Check
+Rem --- eWON user (start)
+FTP_Check:
+//IF ftp_counter% > 0 THEN
+//  IF ftp_counter% > 9 THEN
+//    ftp_counter% = 0
+//  ELSE    
+//    ftp_counter% = ftp_counter% + 1
+//    Print "FTP Count: ";
+//    Print ftp_counter%
+ //   Goto SendData
+    
+ // ENDIF
+//ENDIF
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: FTP Check
+Rem --- eWON start section: SMS Messages
+Rem --- eWON user (start)
+FUNCTION send_sms($ups_mode%)  
+  @TIME_TO_STRING()  
+  D$ = "00447515939629,gsm,0"
+  SMS_Msg$ = "Stoba UPS Alert: "
+  IF($ups_mode% = 0) THEN
+    SMS_Msg$ = SMS_Msg$ + "Deactivated"
+  ELSE
+    SMS_Msg$ = SMS_Msg$ + "Activated" + NP$
+  ENDIF
+    
+    SMS_Msg$ = SMS_Msg$ + "TIME : " + HOUR$ + ":" + MINUTE$ + NL$ + "DATE : " + DAY_1$ + "/" + MONTH_1$ + "/" + YEAR_1$
+  SENDSMS D$, SMS_Msg$
+  Print "Msg Sent"  
+ENDFN
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: SMS Messages
+Rem --- eWON start section: test
+Rem --- eWON user (start)
+test123:   
+  @TIME_TO_STRING()
+  Message$ = "Virtue Test E-mail" + NP$
+  Message$ = Message$ + "TIME : " + HOUR$ + ":" + MINUTE$ + NL$ + "DATE : " + DAY_1$ + "/" + MONTH_1$ + "/" + YEAR_1$
+ //SENDMAIL E1$,E2$, "Virtue Test E-mail", Message$
+ //SENDMAIL E1$,"","Virtue Test E-mail", Message$
+ //SENDMAIL E2$,"tom.csmith@powerstar.com","Virtue Test E-mail", Message$
+// SENDMAIL "tom.csmith@powerstar.com","","Virtue Test E-mail", Message$
+ SENDMAIL E1$,"","Virtue Test E-mail", Message$
+ Print"Test E-mail Sent"
+ Print Message$
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: test
+Rem --- eWON start section: Time
+Rem --- eWON user (start)
+FUNCTION TIME_TO_STRING()
+  A$ = Time$
+  H% = Val(A$(12 To 13))
+  M% = Val(A$(15 To 16))
+  D% = Val(A$(1 To 2))
+  Z% = Val(A$(4 To 5))
+  Y% = Val(A$(7 To 10))    
+  HOUR$ = SFMT H%, 30, 0, "%d"
+  MINUTE$ = SFMT M%, 30, 0, "%d"
+  DAY_1$ = SFMT D%, 30, 0, "%d"
+  MONTH_1$ = SFMT Z%, 30, 0, "%d"
+  YEAR_1$ = SFMT Y%, 30, 0, "%d"
+  
+  IF H% < 10 THEN
+    HOUR$ = "0" + HOUR$
+  ENDIF
+  
+  IF M% < 10 THEN
+    MINUTE$ = "0" + MINUTE$
+  ENDIF
+ENDFN
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Time
+Rem --- eWON start section: FTP New
+Rem --- eWON user (start)
+SendAllData:
+T$ = Time$
+year$ = T$(7 To 10)
+mon$ = T$(4 To 5)
+date$ = T$(1 To 2)
+hour$ = T$(12 To 13)
+min$ = T$(15 To 16)
+sec$ = T$(18 To 19)
+  
+FileNameLogs$ =  "Stoba/Daily_Logs-" + year$ + "-" + mon$ + "-" + date$ + ".csv"
+FileNameEvents$ = "Stoba/Daily_Events-" + year$ + "-" + mon$ + "-" + date$ + ".csv"
+PUTFTP FileNameLogs$,"[$dtHT$ftT$st_d7$et_s0$flB]"
+PUTFTP FileNameEvents$,"[$dtEV$st_d7$et_s0$ut$ut$ftT]"
+Print "FTP Logs Sent"
+Print "FTP Event Sent"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: FTP New
+Rem --- eWON start section: Check All PCS in VSG
+Rem --- eWON user (start)
+Check_PCS_VSG:
+IF ((PCS_1_Work_Status@ <> 128) OR (PCS_2_Work_Status@ <> 128)) THEN
+  AGG_DISABLE@ = 1
+  EMS_Setpoint@ = 0
+  PCS_FAULT_FLAG% = 1
+ELSE
+  IF PCS_FAULT_FLAG% = 1 THEN
+    PCS_FAULT_FLAG% = 0
+    AGG_DISABLE@ = 0
+  ENDIF
+ENDIF
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Check All PCS in VSG
+Rem --- eWON start section: DUoS
+Rem --- eWON user (start)
+duos:
+  A$ = Time$
+  H% = Val(A$(12 To 13))
+  M% = Val(A$(15 To 16))
+  D% = Val(A$(1 To 2))
+  Z% = Val(A$(4 To 5))
+  Y% = Val(A$(7 To 10))    
+//DUoS
+  IF ( (((H% = 16) AND (M% >= 30)) OR ((H% > 16)) AND (H% < 19))) THEN
+    IF ((PLC_SoC_A@ > 20) AND (PLC_SoC_B@ > 20)) THEN
+      EMS_Power_Setpoint@ = Acuvim_Load_Active_Power@ * 5
+      duos_started% = 1
+    ELSE
+      IF duos_started% THEN
+        duos_started% = 0
+        EMS_Power_Setpoint@ = 0
+      ENDIF
+    ENDIF
+  ELSE
+    IF duos_started% THEN      
+      EMS_Power_Setpoint@ = 0
+      duos_started% = 0
+    ENDIF
+  ENDIF
+// Charge back up
+   IF ( (H% >= 20) OR (H% < 6)) THEN
+    IF ((PLC_SoC_A@ < 95) AND (PLC_SoC_B@ < 95)) THEN
+      EMS_Power_Setpoint@ = -600
+      duos_charge% = 1
+    ELSE
+      IF duos_charge% THEN
+        duos_charge% = 0
+        EMS_Power_Setpoint@ = 0
+      ENDIF
+    ENDIF
+  ELSE
+    IF duos_charge% THEN
+      duos_charge% = 0
+      EMS_Power_Setpoint@ = 0
+    ENDIF
+  ENDIF
+  
+  
+  
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: DUoS

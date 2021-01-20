@@ -1,0 +1,384 @@
+Rem --- eWON start section: Cyclic Section
+eWON_cyclic_section:
+Rem --- eWON user (start)
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Cyclic Section
+Rem --- eWON start section: Init Section
+eWON_init_section:
+Rem --- eWON user (start)
+upper_soc = 95
+lower_soc = 5
+desired_soc = 50
+charge_50% = 0
+discharge_50% = 0
+HOUR$ = "0"
+MINUTE$ = "0"
+DAY_1$ = "0"
+MONTH_1$ = "0"
+YEAR_1$ = "0"
+UPS_Critical_Count = 0 
+upper_limit_reached% = 0
+lower_limit_reached% = 0
+email_sent_UPS% = 0
+start_email_timer% = 0
+email_warning% = 0
+UPS_email_customer% = 0
+ftp_counter% = 1
+NL$ = (CHR$(13)+CHR$(10))
+NP$ = NL$ + NL$  
+TSET 1,1
+TSET 2,2
+TSET 3,3
+TSET 4,60
+ONTIMER 2, "goto Fault_Bits"
+ONTIMER 1, "goto SoC_Limit"
+ONTIMER 4, "goto Email_Check"
+//ONCHANGE "BMS_System_SOC","goto ups_alert"
+ONCHANGE "ATS_System_Status","goto ups_alert"  //ATS_System_Status"
+ONCHANGE "UPS_MODE","goto Email_check"
+E1$ = "leonard.emaki@powerstar.com;solon.mardapittas@powerstar.com;lee.hudson@powerstar.com;security.windsor@centrica.com"//160-DL-VIRTUE@Bemis.com
+E2$ = "leonard.emaki@powerstar.com;solon.mardapittas@powerstar.com"  //;lee.hudson@powerstar.com"//160-DL-VIRTUE@Bemis.com
+ONSTATUS "goto Status"
+putFtpId% = 0
+getFtpId% = 0
+//ONDATE 4,"* * * * *","ftp_counter% = 1" // Every minute
+//ONTIMER 1, "goto ups_alert"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Init Section
+Rem --- eWON start section: Fault Bits
+Rem --- eWON user (start)
+Fault_Bits:
+// ATS Fault Split
+ATS_Fault_1@ = ATS_Fault_Word_1@#0
+ATS_Fault_2@ = ATS_Fault_Word_1@#1
+ATS_Fault_3@ = ATS_Fault_Word_1@#2
+ATS_Fault_4@ = ATS_Fault_Word_1@#3
+ATS_Fault_5@ = ATS_Fault_Word_1@#10
+ATS_Fault_6@ = ATS_Fault_Word_1@#11
+ATS_Fault_7@ = ATS_Fault_Word_1@#13
+ATS_Fault_8@ = ATS_Fault_Word_1@#14
+ATS_Fault_9@ = ATS_Fault_Word_1@#15
+ATS_Fault_10@ = ATS_Fault_Word_1@#17
+ATS_Fault_11@ = ATS_Fault_Word_1@#18
+ATS_Fault_12@ = ATS_Fault_Word_1@#21
+ATS_Fault_13@ = ATS_Fault_Word_1@#22
+ATS_Fault_14@ = ATS_Fault_Word_1@#23
+ATS_Fault_15@ = ATS_Fault_Word_1@#24
+ATS_Fault_16@ = ATS_Fault_Word_1@#25
+ATS_Fault_17@ = ATS_Fault_Word_1@#26
+ATS_Fault_18@ = ATS_Fault_Word_1@#27
+ATS_Fault_19@ = ATS_Fault_Word_1@#28
+ATS_Fault_20@ = ATS_Fault_Word_1@#29
+// ATS Alarm Split
+ATS_Alarm_1@ = ATS_Alarm_Word@#7
+ATS_Alarm_2@ = ATS_Alarm_Word@#8
+ATS_Alarm_3@ = ATS_Alarm_Word@#9
+ATS_Alarm_4@ = ATS_Alarm_Word@#10
+ATS_Alarm_5@ = ATS_Alarm_Word@#11
+ATS_Alarm_6@ = ATS_Alarm_Word@#12
+//PCS_Fault_1@ = PCS_Fault_Word_1@#0
+//PCS_Fault_2@ = PCS_Fault_Word_1@#1
+//PCS_Fault_3@ = PCS_Fault_Word_1@#2
+//PCS_Fault_4@ = PCS_Fault_Word_1@#3
+//PCS_Fault_5@ = PCS_Fault_Word_1@#4
+//PCS_Fault_6@ = PCS_Fault_Word_1@#5
+//PCS_Fault_7@ = PCS_Fault_Word_1@#6
+//PCS_Fault_8@ = PCS_Fault_Word_1@#7
+//PCS_Fault_9@ = PCS_Fault_Word_1@#8
+//PCS_Fault_10@ = PCS_Fault_Word_1@#9
+//PCS_Fault_11@ = PCS_Fault_Word_1@#10
+//PCS_Fault_12@ = PCS_Fault_Word_1@#11
+//PCS_Fault_13@ = PCS_Fault_Word_1@#12
+//PCS_Fault_14@ = PCS_Fault_Word_1@#13
+//PCS_Fault_15@ = PCS_Fault_Word_1@#14
+//PCS_Fault_16@ = PCS_Fault_Word_1@#15
+//PCS_Fault_17@ = PCS_Fault_Word_1@#16
+//PCS_Fault_18@ = PCS_Fault_Word_1@#17
+//PCS_Fault_19@ = PCS_Fault_Word_1@#18
+//PCS_Fault_20@ = PCS_Fault_Word_1@#19
+//PCS_Fault_21@ = PCS_Fault_Word_1@#20
+//PCS_Fault_22@ = PCS_Fault_Word_1@#21
+//PCS_Fault_23@ = PCS_Fault_Word_1@#22
+//PCS_Fault_24@ = PCS_Fault_Word_1@#23
+//PCS_Fault_25@ = PCS_Fault_Word_1@#24
+//PCS_Fault_26@ = PCS_Fault_Word_1@#25
+//PCS_Fault_27@ = PCS_Fault_Word_1@#26
+//PCS_Fault_28@ = PCS_Fault_Word_1@#27
+//PCS_Fault_29@ = PCS_Fault_Word_1@#28
+//PCS_Fault_30@ = PCS_Fault_Word_2@#0
+//PCS_Fault_31@ = PCS_Fault_Word_2@#1
+//PCS_Fault_32@ = PCS_Fault_Word_2@#2
+//PCS_Fault_33@ = PCS_Fault_Word_2@#3
+//PCS_Fault_34@ = PCS_Fault_Word_2@#4
+//PCS_Fault_35@ = PCS_Fault_Word_2@#5
+//PCS_Fault_36@ = PCS_Fault_Word_2@#6
+//PCS_Fault_37@ = PCS_Fault_Word_2@#9
+//PCS_Fault_38@ = PCS_Fault_Word_2@#10
+//PCS_Fault_39@ = PCS_Fault_Word_2@#11
+//PCS_Fault_40@ = PCS_Fault_Word_2@#15
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Fault Bits
+Rem --- eWON start section: SoC Limits
+Rem --- eWON user (start)
+SoC_Limit:
+IF (BMS_System_SOC@ >= upper_soc) THEN                // check upper limit soc
+	upper_limit_reached% = 1
+ENDIF
+IF (BMS_System_SOC@ <= lower_soc) THEN               // check lower limit soc
+	lower_limit_reached% = 1
+ENDIF
+IF (upper_limit_reached% > 0)  THEN                  // if upper limit rechead, stop chariging and drift discharging
+  discharge_50% = 1
+  charge_50% = 0
+  EMS_Power_Setpoint@ = 0
+  upper_limit_reached% = 0
+  Print " Charge Stopped and upper drift"
+ENDIF 
+IF (lower_limit_reached% > 0) THEN                   // if lower limit rechead, stop dischariging and drift charging
+  discharge_50% = 1
+  charge_50% = 1
+  discharge_50% = 0
+  EMS_Power_Setpoint@ = 0
+  lower_limit_reached% = 0
+  Print "Discharge Stopped and lower drift"
+ENDIF
+IF (discharge_50% > 0) THEN                          // if charge is on the safety limit, stop charging
+	IF (BMS_System_SOC@ <= desired_soc) THEN
+		EMS_Power_Setpoint@ = 0
+		discharge_50% = 0
+		Print "Discharge Finished"
+	ELSE
+		EMS_Power_Setpoint@ = 1000
+    Print "Safety Discharge"
+	ENDIF
+ENDIF
+IF (charge_50% > 0) THEN
+	IF (BMS_System_SOC@ >= desired_soc) THEN
+		EMS_Power_Setpoint@ = 0
+		charge_50% = 0
+		Print "Charge Finished"    
+	ELSE
+	EMS_Power_Setpoint@ = -1000
+    Print "Safety Charge"
+	ENDIF
+ENDIF
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: SoC Limits
+Rem --- eWON start section: email
+Rem --- eWON user (start)
+// 5 Minute info
+FUNCTION send_email_eng  
+  @TIME_TO_STRING()
+   SOC$ =  SFMT BMS_System_SOC@,20,4,"%f" 
+  Print "Sending e-mail"
+  IF (Acuvim_Load_Active_Power@ > 0) THEN
+    divisor% = Acuvim_Load_Active_Power@
+    meter_float = Acuvim_Load_Active_Power@
+  ELSE
+    divisor% = Acuvim_Load_Active_Power@
+    meter_float = Acuvim_Load_Active_Power@
+  ENDIF
+  ups_time% = (1130 * 60 * (BMS_System_SOC@ / 100) * (BMS_System_SOH@ / 100) * 0.8) / meter_float
+  M2$ = SFMT ups_time%,30,0,"%1d"  
+  M3$ = SFMT meter_float,20,4,"%f"
+  Print BMS_System_SOC@
+  SOC$ =  SFMT BMS_System_SOC@,20,4,"%f"
+  
+  M1$ = "Virtue UPS Mode Alert" + NL$ + "UPS Mode: Activated" + NP$ + "You have around "  
+  M1$ = M1$ + M2$ + " minutes of power left at the current load of " + M3$ + " kW"
+  M1$ = M1$ + NP$ + "State of Charge is: " + SOC$ + "%" + NP$
+  
+  If ATS_Status_SOC@ < 30.0 THEN   // Add cation message for the critical email    
+     M1$ = M1$ + "Recommended Action: Shut down critical applications" + NP$
+  ENDIF
+  M1$ = M1$ + "TIME : " + HOUR$ + ":" + MINUTE$ + NL$ + "DATE : " + DAY_1$ + "/" + MONTH_1$ + "/" + YEAR_1$
+   
+  Message$ = M1$   
+ 
+  //SENDMAIL E1$, E2$;E3$, "Virtue UPS Mode Alert", Message$
+  IF  BMS_System_SOC@ < 30.0 THEN   // IF SOC below 30%, change email haeding to Critical 
+     IF  UPS_Critical_Count = 6 THEN
+         SENDMAIL E1$,"","Virtue UPS CRITICAL BATTERY WARNING", Message$
+         UPS_Critical_Count = 0
+     ENDIF
+     IF  BMS_System_SOC@ < 10.0 THEN    // If SOC below 10, increase critical message send frequency
+        UPS_Critical_Count = 6
+     ELSE
+        UPS_Critical_Count = UPS_Critical_Count + 1
+     ENDIF
+     Print UPS_Critical_Count
+     Print"Engineer email sent"
+  ELSE
+     IF NOT(email_sent_UPS%) THEN
+        email_sent_UPS% = 1
+        SENDMAIL E1$,"","Virtue UPS Mode Alert", Message$     
+        Print"Engineer email sent"
+     ENDIF
+  ENDIF
+  //SENDMAIL E2$,"","Virtue UPS Mode Alert", Message$
+  //Print"Engineer email sent"
+ENDFN
+// Back to normal
+FUNCTION send_email_cust($ups_mode%) 
+  @TIME_TO_STRING()
+  Mes1$ = "Virtue Customer Notification" + NP$ + "UPS "
+  Mes2$ = ""
+  IF($ups_mode% = 0) THEN
+    Mes2$ = "Deactivated. Mains Power restored"+ NP$ + "System status: Standby"
+  ELSE
+    Mes2$ = "Activated, Facility running on batteries" + NP$ + "System status: Running"
+  ENDIF  
+  
+  Msg$ = Mes1$ + Mes2$ + NP$
+  
+  Msg$ = Msg$ + "TIME : " + HOUR$ + ":" + MINUTE$ + NL$ + "DATE : " + DAY_1$ + "/" + MONTH_1$ + "/" + YEAR_1$
+  
+  //SENDMAIL E1$, E2$, "Virtue UPS Mode Alert", Msg$
+  SENDMAIL E1$,"", "Virtue UPS Mode Alert", Msg$
+  Print"Customer email sent"
+ENDFN
+// Critical Battery Warning
+FUNCTION send_warning()     
+  @TIME_TO_STRING()
+  SOC$ =  SFMT BMS_System_SOC@,20,4,"%f" 
+  
+  M1$ = "Virtue UPS Mode Alert" + NL$ + "Battery Low Warning" + NP$   
+  M1$ = M1$ + NP$ + "State of Charge is: " + SOC$ + "%"   
+  MW$ = "Recommended Action: Shut down critical applications"
+  M1$ = M1$ + NP$ + MW$ + NP$
+  M1$ = M1$ + "TIME : " + HOUR$ + ":" + MINUTE$ + NL$ + "DATE : " + DAY_1$ + "/" + MONTH_1$ + "/" + YEAR_1$
+  Message$ = M1$
+ 
+  //SENDMAIL E1$,E2$, "Virtue UPS CRITICAL BATTERY WARNING", Message$
+  SENDMAIL E2$,"", "Virtue UPS CRITICAL BATTERY WARNING", Message$
+  Print"10% Warning email sent"
+ENDFN
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: email
+Rem --- eWON start section: Time
+Rem --- eWON user (start)
+FUNCTION TIME_TO_STRING()
+  A$ = Time$
+  H% = Val(A$(12 To 13))
+  M% = Val(A$(15 To 16))
+  D% = Val(A$(1 To 2))
+  Z% = Val(A$(4 To 5))
+  Y% = Val(A$(7 To 10))    
+  HOUR$ = SFMT H%, 30, 0, "%d"
+  MINUTE$ = SFMT M%, 30, 0, "%d"
+  DAY_1$ = SFMT D%, 30, 0, "%d"
+  MONTH_1$ = SFMT Z%, 30, 0, "%d"
+  YEAR_1$ = SFMT Y%, 30, 0, "%d"
+  
+  IF H% < 10 THEN
+    HOUR$ = "0" + HOUR$
+  ENDIF
+  
+  IF M% < 10 THEN
+    MINUTE$ = "0" + MINUTE$
+  ENDIF
+ENDFN
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Time
+Rem --- eWON start section: UPS_email_Check
+Rem --- eWON user (start)
+Email_Check:
+//E-MAIL Alerts
+IF UPS_MODE@ THEN
+  IF (UPS_email_customer% = 0) THEN
+    UPS_email_customer% = 1
+    @send_email_cust(UPS_email_customer%)     
+   // @send_sms(UPS_email_customer%)
+  ENDIF  
+  
+  //IF NOT(email_sent_UPS%) THEN
+   // email_sent_UPS% = 1
+    @send_email_eng()
+  //ENDIF
+  
+ENDIF
+IF NOT(UPS_MODE@) THEN
+    email_warning% = 0
+    email_sent_UPS% = 0
+    start_email_timer% = 0    
+    IF (UPS_email_customer% = 1) THEN
+      UPS_email_customer% = 0
+      @send_email_cust(UPS_email_customer%)    
+      //@send_sms(UPS_email_customer%)
+    ENDIF
+ENDIF
+IF email_sent_UPS% THEN
+  IF start_email_timer% = 0 THEN
+    start_email_timer% = 1
+    time_save% = GETSYS PRG, "TIMESEC"
+  ENDIF
+    
+  IF start_email_timer% = 1 THEN
+    current_time% = GETSYS PRG, "TIMESEC"
+    IF ((current_time% - time_save%) >= (5 * 60)) THEN
+      start_email_timer% = 0
+      email_sent_UPS% = 0
+     // @send_email_eng()
+    ENDIF
+  ENDIF
+ENDIF
+//Goto "G59_Check"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: UPS_email_Check
+Rem --- eWON start section: UPS_Check
+Rem --- eWON user (start)
+ups_alert:
+UPS_MODE@ = ATS_System_Status@#3  //ATS_Status_T@#3  
+//Goto  "Email_Check"   //"LED"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: UPS_Check
+Rem --- eWON start section: Status
+Rem --- eWON user (start)
+status:
+eventId% = GETSYS PRG,"ACTIONID"
+IF eventId% = getFtpId% THEN
+  stat% = GETSYS PRG, "ACTIONSTAT"
+  If stat% = 0 Then
+    Print "put ftp"
+    PUTFTP ftpDir$, ewonDir$
+    putFtpId% = GETSYS PRG,"ACTIONID"
+  ENDIF
+ENDIF
+IF eventId% = putFtpId% THEN
+  stat% = GETSYS PRG, "ACTIONSTAT"
+  If stat% = 0 Then
+    Print "erase"    
+    ERASE ewon_store_fn$
+  ENDIF
+ENDIF
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Status
+Rem --- eWON start section: Fault_Check
+Rem --- eWON user (start)
+If ((ATS_Fault_Word_1@ > 0) OR (PLC_PCS_Fault_Status_1@ > 0) OR (PLC_PCS_Fault_Status_2@ > 0) OR (Comms_ATS@ <> 1) OR (Comms_PCS@ <> 1)) Then
+	Fault_Mem@ = 1
+Else
+	Fault_Mem@ = 0
+ENDIF
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Fault_Check
+Rem --- eWON start section: Alarm_Check
+Rem --- eWON user (start)
+If ((PLC_Alarm_OVR_LIMIT_EXP@ > 0) OR (PLC_Alarm_OVR_LIMIT_IMP@ > 0) OR (PLC_Alarm_OVR_SOC_LOW@ > 0) OR (PLC_Alarm_OVR_SOC_HIGH@ > 0) OR (PLC_Alarm_OVR_AGG_COMMS@ > 0) OR (PLC_Alarm_OVR_METER_COMMS@ > 0) Then
+	Alarm_Mem@ = 1
+Else
+	Alarm_Mem@ = 0
+ENDIF
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Alarm_Check

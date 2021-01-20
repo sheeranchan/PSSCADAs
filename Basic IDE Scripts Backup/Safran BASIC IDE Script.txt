@@ -1,0 +1,550 @@
+Rem --- eWON start section: Cyclic Section
+eWON_cyclic_section:
+Rem --- eWON user (start)
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Cyclic Section
+Rem --- eWON start section: Init Section
+eWON_init_section:
+Rem --- eWON user (start)
+Init: 
+TSET 1,60
+TSET 2,20
+//TSET 3,3
+//TSET 4,3
+//ONDATE 3,"1 0 * * MON","ftp_counter% = 1"//"GOTO SendData" // Every Sunday at 11:50 PM
+//ONCHANGE "BMS_CON","b% = BMS_CON@:c%=10:GOSUB WriteFct06" :REM b% = value to write,c% = tag address
+ONTIMER 1, "goto Fault_Check" // Also sets up the PCS Time String
+ONTIMER 2, "GOTO apiCall" //update 3rd party data
+
+Fault_Check:
+Fault_Check:
+
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_1@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_2@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_3@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_4@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_5@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_6@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_7@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_8@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_9@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_10@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_11@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_12@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_13@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_14@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_15@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_16@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_17@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_18@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_19@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_20@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_21@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_22@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_23@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_24@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_25@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_26@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_27@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_28@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_29@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_30@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_31@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_32@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_33@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_34@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_35@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_36@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_37@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_38@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_39@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_40@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_41@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_42@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_43@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_44@
+PCS1_Fault_Word@ = PCS1_Fault_Word@ + PCS1_Fault_45@
+IF PCS1_Fault_Word@ >= 1 THEN
+    PCS1_Fault_Bit@ = 1
+Else
+    PCS1_Fault_Bit@ = 0
+ENDIF
+
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_1@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_2@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_3@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_4@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_5@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_6@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_7@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_8@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_9@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_10@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_11@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_12@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_13@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_14@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_15@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_16@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_17@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_18@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_19@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_20@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_21@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_22@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_23@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_24@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_25@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_26@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_27@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_28@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_29@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_30@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_31@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_32@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_33@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_34@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_35@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_36@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_37@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_38@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_39@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_40@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_41@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_42@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_43@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_44@
+PCS2_Fault_Word@ = PCS2_Fault_Word@ + PCS2_Fault_45@
+IF PCS2_Fault_Word@ >= 1 THEN
+    PCS2_Fault_Bit@ = 1
+Else
+    PCS2_Fault_Bit@ = 0
+ENDIF
+
+
+
+
+
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_1@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_2@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_3@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_4@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_5@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_6@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_7@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_8@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_9@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_10@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_11@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_12@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_13@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_14@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_15@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_16@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_17@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_18@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_19@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_20@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_21@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_22@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_23@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_24@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_25@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_26@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_27@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_28@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_29@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_30@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_31@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_32@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_33@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_34@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_35@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_36@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_37@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_38@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_39@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_40@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_41@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_42@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_43@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_44@
+PCS3_Fault_Word@ = PCS3_Fault_Word@ + PCS3_Fault_45@
+IF PCS3_Fault_Word@ >= 1 THEN
+    PCS3_Fault_Bit@ = 1
+Else
+    PCS3_Fault_Bit@ = 0
+ENDIF
+
+//BMS 1 summary fault
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault1@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault2@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault3@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault4@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault5@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault6@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault7@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault8@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault9@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault10@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault11@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault12@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault13@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault14@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault15@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault16@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault17@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault18@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault19@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault20@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault21@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault22@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault23@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault24@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault25@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault26@
+BMS1_Fault_Word@ = BMS1_Fault_Word@ + BMS1_Fault27@
+IF BMS1_Fault_Word@ >= 1 THEN
+    BMS1_Fault_Bit@ = 1
+Else
+    BMS1_Fault_Bit@ = 0
+ENDIF
+
+//BMS 1 summary alarm
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm1@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm2@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm3@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm4@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm5@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm6@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm7@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm8@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm9@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm10@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm11@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm12@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm13@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm14@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm15@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm16@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm17@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm18@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm19@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm20@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm21@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm22@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm23@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm24@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm25@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm26@
+BMS1_Alarm_Word@ = BMS1_Alarm_Word@ + BMS1_Alarm27@
+IF BMS1_Alarm_Word@ >= 1 THEN
+    BMS1_Alarm_Bit@ = 1
+Else
+    BMS1_Alarm_Bit@ = 0
+ENDIF
+
+
+
+
+//BMS 2 summary fault
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault1@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault2@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault3@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault4@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault5@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault6@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault7@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault8@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault9@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault10@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault11@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault12@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault13@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault14@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault15@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault16@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault17@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault18@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault19@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault20@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault21@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault22@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault23@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault24@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault25@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault26@
+BMS2_Fault_Word@ = BMS2_Fault_Word@ + BMS2_Fault27@
+IF BMS2_Fault_Word@ >= 1 THEN
+    BMS2_Fault_Bit@ = 1
+Else
+    BMS2_Fault_Bit@ = 0
+ENDIF
+
+//BMS 2 summary alarm
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm1@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm2@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm3@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm4@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm5@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm6@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm7@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm8@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm9@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm10@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm11@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm12@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm13@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm14@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm15@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm16@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm17@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm18@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm19@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm20@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm21@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm22@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm23@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm24@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm25@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm26@
+BMS2_Alarm_Word@ = BMS2_Alarm_Word@ + BMS2_Alarm27@
+IF BMS2_Alarm_Word@ >= 1 THEN
+    BMS2_Alarm_Bit@ = 1
+Else
+    BMS2_Alarm_Bit@ = 0
+ENDIF
+
+
+//BMS 3 summary fault
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault1@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault2@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault3@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault4@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault5@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault6@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault7@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault8@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault9@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault10@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault11@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault12@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault13@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault14@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault15@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault16@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault17@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault18@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault19@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault20@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault21@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault22@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault23@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault24@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault25@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault26@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault27@
+IF BMS3_Fault_Word@ >= 1 THEN
+    BMS3_Fault_Bit@ = 1
+Else
+    BMS3_Fault_Bit@ = 0
+ENDIF
+
+//BMS 3 summary alarm
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm1@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm2@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm3@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm4@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm5@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm6@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm7@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm8@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm9@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm10@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm11@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm12@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm13@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm14@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm15@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm16@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm17@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm18@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm19@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm20@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm21@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm22@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm23@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm24@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm25@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm26@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm27@
+IF BMS3_Alarm_Word@ >= 1 THEN
+    BMS3_Alarm_Bit@ = 1
+Else
+    BMS3_Alarm_Bit@ = 0
+ENDIF
+
+
+//BMS 3 summary fault
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_1@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_2@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_3@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_4@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_5@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_6@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_7@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_8@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_9@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_10@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_11@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_12@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_13@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_14@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_15@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_16@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_17@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_18@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_19@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_20@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_21@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_22@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_23@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_24@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_25@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_26@
+BMS3_Fault_Word@ = BMS3_Fault_Word@ + BMS3_Fault_27@
+IF BMS3_Fault_Word@ >= 1 THEN
+    BMS3_Fault_Bit@ = 1
+Else
+    BMS3_Fault_Bit@ = 0
+ENDIF
+
+//BMS 3 summary alarm
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_1@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_2@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_3@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_4@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_5@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_6@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_7@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_8@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_9@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_10@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_11@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_12@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_13@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_14@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_15@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_16@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_17@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_18@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_19@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_20@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_21@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_22@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_23@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_24@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_25@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_26@
+BMS3_Alarm_Word@ = BMS3_Alarm_Word@ + BMS3_Alarm_27@
+IF BMS3_Alarm_Word@ >= 1 THEN
+    BMS3_Alarm_Bit@ = 1
+Else
+    BMS3_Alarm_Bit@ = 0
+ENDIF
+​
+Read_3rd_party_data
+//CSV file content parser, after you get the last up-to-date string, then you can use this parser function to separate those values
+Function SplitString$ ($StringToParse$,$Pos%, $char$)
+$e% = 1
+$loopnbr% = 0
+$NextLine:
+$f% = INSTR $e% , $StringToParse$ , $char$
+//LAST ELEMENT
+IF $f% = 0 THEN  
+   $B$ = $StringToParse$( $e% TO LEN $StringToParse$)
+   GOTO $EndOfLine        
+ENDIF
+$loopnbr% = $loopnbr% + 1
+$B$ = $StringToParse$( $e% TO $f%-1)
+IF $Pos% = $loopnbr% THEN GOTO $EndOfLine
+$e% = $f% + 1 //REM Init for next loop/line            
+GOTO $NextLine
+$EndOfLine:
+$SplitString$ = $B$
+EndFn
+
+apiCall:
+//Make a FTP call to get the data from the 3rd party server, store the result on ewon FTP server, under /usr/ directory
+GETFTP "envision_export_1hr.csv", "/usr/safran_data.csv","safran_envision_ftp:L76$exKD@213.171.205.54,1"
+actionID% = GETSYS PRG, "ACTIONID"
+PRINT "request action id is "; actionID%
+ONSTATUS "GOTO onEvent"
+END
+onEvent:
+eventId% = GETSYS PRG, "EVTINFO"
+PRINT "event id is "; eventId%
+IF (eventId% = actionID%) THEN
+  SETSYS PRG, "ACTIONID", eventId%
+  stat% = GETSYS PRG, "ACTIONSTAT"
+  Print "stats is: "; stat%
+    IF (stat% = 0) THEN
+      GOTO response
+    ELSE
+      PRINT "Error (ERROR = "+Str$(stat%) + ")"
+    ENDIF
+ENDIF
+END
+//Open and read the content we stored above as binary stream
+response:
+PRINT "open file"
+OPEN "file:/usr/safran_data.csv" FOR BINARY INPUT AS 1
+Line$ = ""
+ReadNext:
+//Read until the end of file
+IF EOF 1 THEN GOTO ReadNext
+//open first file, get the length of 300 chars
+CHAR$ = GET 1,500
+PRINT CHAR$
+//The 3rd party file may just contain the csv file table header, which is just 128 chars
+//we only execute data separation if the whole stream length is greater than 150 chars
+IF(LEN(CHAR$) > 150) THEN
+tmp1% = FCNV @SplitString$ (CHAR$,17, ","),20,0,"%f"//*2
+tmp2% = FCNV @SplitString$ (CHAR$,18, ","),20,0,"%f"//*2
+tmp3% = FCNV @SplitString$ (CHAR$,19, ","),20,0,"%f"//*2
+tmp4% = FCNV @SplitString$ (CHAR$,20, ","),20,0,"%f"//*2
+tmp5% = FCNV @SplitString$ (CHAR$,21, ","),20,0,"%f"//*2
+tmp6% = FCNV @SplitString$ (CHAR$,22, ","),20,0,"%f"//*2
+
+//the 3rd party data is for half hour, we are measuring kWh, so we need to time each one with 2
+PV_Sum@ = tmp1%*2
+SAF_CHP@ = tmp2%*2
+SAF_P1_Hangar1_Annex1@ = tmp3%*2
+Sum_of_Hangar_3@ = tmp4%*2
+Sum_of_Hangar_4@ = tmp5%*2
+Sum_of_Hangar_5@ = tmp6%*2
+
+//PRINT "start printing"
+//PRINT PV_Sum@
+//PRINT SAF_CHP@
+//PRINT SAF_P1_Hangar1_Annex1@
+//PRINT Sum_of_Hangar_3@
+//PRINT Sum_of_Hangar_4@
+//PRINT Sum_of_Hangar_5@
+//PRINT "end printing"
+//close the file after reading, otherwise next loop you will fail to open it again
+CLOSE 1
+ELSE
+PV_Sum@ = 0.0
+SAF_CHP@ = 0.0
+SAF_P1_Hangar1_Annex1@ = 0.0
+Sum_of_Hangar_3@ = 0.0
+Sum_of_Hangar_4@ = 0.0
+Sum_of_Hangar_5@ = 0.0
+CLOSE 1
+ENDIF
+ENDIF
+ReadDone:
+PRINT "close file"
+CLOSE 1

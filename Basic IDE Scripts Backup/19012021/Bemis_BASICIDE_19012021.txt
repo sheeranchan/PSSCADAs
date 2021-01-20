@@ -1,0 +1,408 @@
+  ////////////////////////////
+ //	Initialisation          /
+////////////////////////////
+
+//parameters initialisation for UPS alert mailing & SMS msg - added by SC 19/01/2021
+email_warning% = 0
+UPS_email_customer% = 0
+ups_time%  = 0
+UPS_Firstpass%  = 0
+UPS_count% = 0
+email_sent_UPS% = 0
+NL$ = (CHR$(13)+CHR$(10))
+NP$ = NL$ + NL$   
+SOC$ = NL$
+BMS_System_SoC% = 0
+
+//parameters for DUos Setting - added by SC 19/01/2021
+upper_soc% = 95
+lower_soc% = 13
+DUOS_Limit% = 23
+desired_soc% = 50
+PCS_FAULT_FLAG% = 0
+charge_50% = 0
+discharge_50% = 0
+
+faults1% = 0
+faults2% = 0
+faults3% = 0
+faults4% = 0
+ 
+HOUR$ = "0"
+MINUTE$ = "0"
+DAY_1$ = "0"
+MONTH_1$ = "0"
+YEAR_1$ = "0"
+ 
+upper_limit_reached% = 0
+lower_limit_reached% = 0
+start_email_timer% = 0
+ftp_counter% = 1
+//E1$ = "sheeran.chen@powerstar.com"
+//E2$ = "sheeran.chen@powerstar.com"
+E1$ = "olivia.zeng@powerstar.com;sheeran.chen@powerstar.com;solon.mardapittas@powerstar.com;IJThain@bemis.com;TKitching@bemis.com;"//160-DL-VIRTUE@Bemis.com
+E1$ = E1$ + "mswallow@bemis.com;MABird2@Bemis.com;sdixon@bemis.com;IHaigh@bemis.com;MGHudson@bemis.com;JJHyke@bemis.com;PJewitt@Bemis.com;cjnorman@bemis.com;SOveral@bemis.com;DFPymm@bemis.com;MCaddick@bemis.com"
+E2$ = "olivia.zeng@powerstar.com;sheeran.chen@powerstar.com;solon.mardapittas@powerstar.com;"
+E2$ = E2$ + "TKitching@bemis.com;JCRock@Bemis.com;PSeifert@Bemis.com;MThomas@Bemis.com;jtomlin@bemis.com;APRESS522@Bemis.com;APRESS523@Bemis.com;app-160-extrusion@Bemis.com;AHaslett@bemis.com;JMiddlemas@Bemisco.net;LShipperbottom@Bemis.com"
+D$ = "07958195005,gsm,0" // UPS mode alert to Sheeran cellphone, updated 19/01/2021
+SoC_Limit_Low%  = 180 // 18% 
+SoC_Limit_Low_Safe% = 200 // 20%
+SoC_Limit_High% = 920 // 92% 
+SoC_Limit_High_Safe% = 900 // 90%
+Service_State% = 0
+Set_On% = 0 
+Level_Dir% = 0
+Import_ok% = 0
+Export_ok% = 0
+Import_P% = 0
+Export_P% = 0
+soc_dif% = 0
+min_soc% = 0
+max_soc% = 0
+
+//timers
+TSET 1,6 //updated by Sheeran 18/01/2021
+TSET 2,2 // added by Sheeran 19/01/2021
+ONTIMER 1, "goto SoC_Protection_Run_DUoS"
+ONTIMER 2, "goto UPS_Message" // added by Sheeran 19/01/2021
+
+//Command will be triggered only when status changes
+ONVPN "Goto Inform_Eng"
+ONCHANGE "UPS_MODE","goto ups_alert"
+
+
+
+Inform_Eng:
+i% = GETSYS PRG, "EVTINFO"
+IF I%=1 THEN
+      VPN_ONLINE@ = 1
+      VPN_OFFLINE@ = 0
+      Print "Carland Cross EWON is back online"
+ELSE
+      VPN_ONLINE@ = 0
+      VPN_OFFLINE@ = 1
+      PRINT "Inform msg sent. VPN went offline"
+      //reboot the eWON and see whether it can re-establish the connection again
+      REBOOT
+ENDIF
+
+
+
+SoC_Protection_Run_DUoS:
+  /////////////////////////////
+ // Meter Volts & Currents   /
+// Modified by SC 19/01/2021/
+////////////////////////////
+
+//Metering Reading Calculation added by Olivia on 2020.05.22
+Meter_Supply_Active_Power@ = HMI_Active_Power@ + 10 - PCS_1_Pact@ - PCS_2_Pact@ - PCS_3_Pact@ //Metering Reading Calculation added by Olivia on 2020.05.22
+Meter_Load_Active_Power@ = HMI_Active_Power@ //Metering Reading Calculation added by Olivia on 2020.05.22
+Print "Meter reading calculation done" //Metering Reading Calculation added by Olivia on 2020.05.22
+Meter_Supply_Iph1@=(1.732*1000*Meter_Supply_Active_Power@/PCS_1_Vab@)/3  //supply phase current Reading Calculation added by Sheeran aon 2021.01.18
+Meter_Supply_Iph2@=(1.732*1000*Meter_Supply_Active_Power@/PCS_1_Vbc@)/3  //supply phase current Reading Calculation added by Sheeran aon 2021.01.18
+Meter_Supply_Iph3@=(1.732*1000*Meter_Supply_Active_Power@/PCS_1_Vca@)/3  //supply phase current Reading Calculation added by Sheeran aon 2021.01.18
+Meter_Supply_Vph1@=PCS_1_Vab@/1.732 //supply phase voltage Reading Calculation for trend added by Olivia on 2020.07.22
+Meter_Supply_Vph2@=PCS_1_Vab@/1.732 //supply phase voltage Reading Calculation for trend added by Olivia on 2020.07.22
+Meter_Supply_Vph3@=PCS_1_Vab@/1.732 //supply phase voltage Reading Calculation for trend added by Olivia on 2020.07.22
+
+
+/////////////////////
+// Min & Max SoC  //
+///////////////////
+
+// workout min and max SOC
+min_soc% = EMS_SoC_1@
+IF EMS_SoC_2@ < min_soc% THEN
+   min_soc% = EMS_SoC_2@
+ENDIF 
+IF EMS_SoC_3@ < min_soc% THEN
+   min_soc% = EMS_SoC_3@
+ENDIF
+	
+max_soc% = EMS_SoC_1@
+IF EMS_SoC_2@ > max_soc% THEN
+   max_soc% = EMS_SoC_2@
+ENDIF 
+IF EMS_SoC_3@ > max_soc% THEN
+   max_soc% = EMS_SoC_3@
+ENDIF
+
+
+///////////////////////////////////
+// SoC control by diff domains  //
+/////////////////////////////////
+
+
+// Limit charge or discharge at soc limit level
+IF (min_soc% <= 18.0) THEN	//AND (EMS_SOC_Low@ =0)	//update by Olivia 2020.07.13
+   EMS_SOC_Low@ = 1	
+   EMS_SOC_Ok@ = 0  // No running service... l.e
+   EMS_Power_Setpoint@  = -2000 //charge in 200kw
+ENDIF
+IF (min_soc% >= 20.0) AND (max_soc% <= 90.0)  THEN		//AND (EMS_SOC_Low@ = 1) //update by Olivia 2020.07.13
+   EMS_SOC_Low@ = 0	
+   EMS_SOC_High@ = 0	//update by Olivia 2020.07.13
+   EMS_SOC_Ok@ = 1  // No running service... l.e
+   EMS_Power_Setpoint@  = 0
+ENDIF
+IF (max_soc% >= 92.0) THEN		// AND (EMS_SOC_High@ = 0) 
+   EMS_SOC_High@ = 1	//
+   EMS_SOC_Ok@ = 0  // No running service... l.e
+   EMS_Power_Setpoint@  = 2000 //discharge in 200kw
+ENDIF
+
+
+
+  /////////////////////////////////
+ // Current Hour & State Service /
+/////////////////////////////////
+
+
+// Determin Load_Power_D red, amber and Green window
+IF (EMS_Time_H@ >= 8) AND (EMS_Time_H@ < 16) THEN 
+	 Service_State%     = 1            // morning amber window
+ENDIF
+IF (EMS_Time_H@ >= 16) AND (EMS_Time_H@ < 19) THEN
+	 Service_State%     = 2           // red window
+ENDIF  
+IF (EMS_Time_H@ >= 19) AND (EMS_Time_H@ < 22) THEN
+	 Service_State%     = 3          // evening amber window
+ENDIF
+IF (EMS_Time_H@ >= 22) OR (EMS_Time_H@ < 8) THEN
+	 Service_State%     = 4         // green window
+ENDIF
+
+
+  /////////////////////////////////
+ // 	Import & Export limits     /
+/////////////////////////////////
+
+Import_P% = 1800 - Meter_Load_Active_Power@     // MAX import power
+IF Meter_Load_Active_Power@ < 190 Then          // MAX export power
+   Export_P% = Meter_Load_Active_Power@
+ELSE
+   Export_P% = 190
+ENDIf
+// import export status
+If Import_P% > 100 Then 
+   Import_ok% = 1
+Else
+   Import_ok% = 0
+ENDIF
+    
+If Export_P% > 250 Then 
+   Export_ok% = 1
+Else
+   Export_ok% = 0
+ENDIF
+
+
+  /////////////////////////////////////////////////
+ // 	SoC Drift & Protection | DUoS Control      /
+/////////////////////////////////////////////////
+
+// calculate soc difference
+soc_dif% = max_soc% - min_soc%         
+soc_dif% = soc_dif%/min_soc%
+soc_dif% = soc_dif% * 100
+
+  ///////////////////////////////////////////////
+ // 	Get Ready for DUoS Discharge at 4pm      /
+/////////////////////////////////////////////// 
+
+IF Service_State% = 1 THEN       // if it's in the morning amber window.... 
+   // if difference is greater or equal to 5% then...
+   // if highest soc greater that 90%, discharge at 100kw
+   // limit to export power
+   IF soc_dif% >= 5.0 AND (max_soc% >= 90) AND Export_ok% THEN     
+      EMS_Power_Setpoint@  = 1000
+      Level_Dir% = 1
+   // check highest soc, if below 80% than charge at 100KW
+   // limit to import power
+   ELSEIF soc_dif% >= 5.0 AND (max_soc% <= 80) AND Import_ok% THEN    
+      EMS_Power_Setpoint@  = -1000
+      Level_Dir% = 0	
+      // else, continues with direction set until limit is reached.
+      // limit to import power
+      IF Level_Dir% AND Export_ok% THEN
+         EMS_Power_Setpoint@  = 1000
+      // limit to import power
+      ELSEIF Level_Dir% AND Import_ok% THEN
+         EMS_Power_Setpoint@  = -1000   
+      ELSE
+         EMS_Power_Setpoint@  = 0 
+      ENDIF
+   // if within 5% bounderay...  
+   // if soc is below safe limit high, charge and be ready for DUoS
+   // limit to import power  
+   ELSEIF soc_dif% >= 5.0 AND (max_soc% < 85) AND Import_ok% THEN     
+      EMS_Power_Setpoint@  = -1000  
+   ELSE
+      EMS_Power_Setpoint@  = 0	// else do nothing
+   ENDIF
+   Set_On%   = 0    // Clear Set flag ready for DUoS at 16h30
+ENDIF
+
+  ////////////////////////////////////
+ // 	DUoS Discharge at 4.30pm      /
+//////////////////////////////////// 
+
+If Service_State% = 2 AND (EMS_Time_H@ >= 16) AND (EMS_Time_min@ > 29) THEN        // 16h00 ready for DUoS discharge  
+   Set_On%   = 1                   // Start discharge at 16h30m updated by Sheeran on 2021.01.19 
+
+   // Check if min_soc >= 20.0 THEN... 
+   // Check low limit is not breach and discharge at 250KW 
+   // Check limit to export power
+   IF  Set_On% AND (min_soc% >= 20.0) AND Export_ok% THEN    
+      EMS_Power_Setpoint@  = Meter_Load_Active_Power@*9 //4000 The Duos is down by following the load updated by Sheeran at 19/01/2021
+      Set_On% = 0
+   ELSE
+      EMS_Power_Setpoint@  = 0  
+   ENDIF 
+ENDIf
+
+
+  /////////////////////////////////////////////////
+ // 	  DUoS Continues Until Limits Reached      /
+/////////////////////////////////////////////////
+
+IF Service_State% = 3 THEN            // if it's in the evening amber window....
+   
+   // if difference is greater or equal to 5% then...
+   // if lowest soc greater that 30%, discharge at 100kw
+   // limit to export power
+   IF soc_dif% >= 5 AND (min_soc% >= 30) AND Export_ok% THEN          
+      EMS_Power_Setpoint@  = 1000
+      Level_Dir% = 1
+   // check lowest soc, if below 20 than charge at 100KW
+   // limit to import power
+   ELSEIF soc_dif% >= 5 AND (max_soc% <= 20) AND Import_ok% THEN      
+      EMS_Power_Setpoint@  = -1000   
+      Level_Dir% = 0	
+      // else, continues with direction set until limit is reached.
+      // limit to import power
+      IF Level_Dir% AND Export_ok% THEN
+         EMS_Power_Setpoint@  = 1000
+      // limit to import power 
+      ELSEIF Level_Dir% AND Import_ok% THEN          
+         EMS_Power_Setpoint@  = -1000
+      ELSE                                                   .
+         EMS_Power_Setpoint@  = 0	          // else do nothing 
+      ENDIF
+   ELSE                                                   // if within 5% bounderay...
+      EMS_Power_Setpoint@  = 0	          // else do nothing
+   ENDIF  
+   Set_On%   = 0                             // Clear Set flag ready for DUoS at 16h30
+   
+ENDIF
+
+  ///////////////////////////////////////
+ // 	  DUoS Charge at midnight      /
+///////////////////////////////////////
+
+// Midnight ready for DUoS Charge
+If Service_State% = 4 AND (EMS_Time_H@ >= 23) AND (EMS_Time_min@ > 59) THEN           
+   Set_On%   = 1   // Start charge at midnight
+   // check low limit is not breach and charge at 200KW
+   // limit to export power
+   IF  Set_On% AND (max_soc% <= 90.0) AND import_ok% THEN  
+      EMS_Power_Setpoint@  = -2000
+   ELSE
+      EMS_Power_Setpoint@  = 0 
+      Set_On% = 0	
+   ENDIF
+ENDIF
+
+
+
+
+ups_alert:
+UPS_MODE@ = EMS_System_Status@#3 // bit 3 for UPS mode
+IF UPS_MODE@ THEN      //  TEMP_UPS@
+  
+      M1$ = "Bemis Virtue UPS Mode ON Alert"  
+      SMS_Msg$ = "Bemis Virtue UPS Mode ON Alert"
+      Message$ = M1$   
+      
+      SENDMAIL E1$,E2$,"Bemis Virtue UPS Mode ON Alert", Message$
+      SENDSMS D$, SMS_Msg$
+      
+      Print "message ON sent"
+      Goto "UPS_Message"
+      
+ELSE
+      SMS_Msg$ = "Bemis Virtue UPS Mode OFF Alert"
+      M1$ = "Safran Virtue UPS Mode OFF Alert"  
+      Message$ = M1$   
+      
+      SENDMAIL E1$,"","Bemis Virtue UPS Mode OFF Alert", Message$
+      SENDSMS D$, SMS_Msg$
+      
+      Print "message off sent"
+      
+ENDIF
+
+
+
+
+
+
+UPS_Message:
+UPS_MODE@ = EMS_System_Status@#3 // bit 3 for UPS mode
+IF UPS_MODE@ THEN
+   
+   IF UPS_Firstpass% < 1 THEN
+      email_sent_UPS% = 1
+      UPS_Firstpass%  = 5
+   ENDIF
+   
+ 
+    IF (Meter_Load_Active_Power@ > 0) THEN    
+       meter_float@ = Meter_Load_Active_Power@
+   ELSE    
+       meter_float@ = 500//Meter_Load_Active_Power@
+   ENDIF
+   UPS_count% = UPS_count% + 1
+   
+     //Print  UPS_count%
+     
+   //EMS will balance 3 SoC, so we will use its average values
+   BMS_System_SoC% = (EMS_SoC_1@ + EMS_SoC_2@ + EMS_SoC_3@)/3
+   //calculate the remaining time
+   ups_time% = ((1094 * (BMS_System_SoC% / 100) * 0.75) / meter_float@)*60
+   
+   
+   IF BMS_System_SoC% > 20.0 THEN  // if soc goes below 20% than send email every minutes
+      IF UPS_Count% >= 30 THEN        // 30 means 5 minutes [runs every 10 sec so 30 times is 5 minutes]
+          email_sent_UPS% = 1
+      ENDIF
+   ELSE
+      IF UPS_Count% >= 6 THEN        // 5 means 1 minutes [runs every 10 sec so 6 times is 5 minutes]
+          email_sent_UPS% = 1
+      ENDIF
+   ENDIF
+   IF email_sent_UPS% = 1 THEN    // after 5 minutes, send email out
+      M2$ = SFMT ups_time%,30,0,"%1d"  
+      M3$ = SFMT meter_float@,20,4,"%f"
+  
+      SOC$ =  SFMT BMS_System_SoC%,20,4,"%f"
+      
+      Print M2$
+  
+      M1$ = "Bemis Virtue UPS Mode Alert" + NL$ + "UPS Mode: Activated" + NP$ + "You have around "  
+      M1$ = M1$ + M2$ + " minutes of power left at the current load of " + M3$ + " kW"
+      M1$ = M1$ + NP$ + "State of Charge is: " + SOC$ + "%"
+   
+      Message$ = M1$   
+      
+      SENDMAIL E1$,E2$,"Bemis Virtue UPS Mode Alert", Message$
+       //Print SOC$
+       UPS_count% = 0                // clear counter
+       email_sent_UPS% = 0
+      
+   ENDIF
+ELSE
+   email_sent_UPS% = 0
+   UPS_Firstpass%  = 0
+   UPS_count% = 0
+ENDIF

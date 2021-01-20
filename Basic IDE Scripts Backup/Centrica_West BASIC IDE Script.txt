@@ -1,0 +1,114 @@
+Rem --- eWON start section: Cyclic Section
+eWON_cyclic_section:
+Rem --- eWON user (start)
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Cyclic Section
+Rem --- eWON start section: Init Section
+eWON_init_section:
+Rem --- eWON user (start)
+//FireList$ = "security.winsor@centrica.com;"
+FireList$ = "sheeran.chen@powerstar.com;olivia.zeng@powerstar.com;"
+Fire_Email_Flag% = 0
+Fire_Email_2_Flag% = 0
+NL$ = (CHR$(13)+CHR$(10))
+NP$ = NL$ + NL$
+TSET 2,2
+TSET 3,3
+ONDATE 5,"30 23 * * *","goto SendAllData"
+ONTIMER 2, "goto Check_for_Emails"
+ONTIMER 3, "goto Email_BMS_MAx_T_Alarm"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Init Section
+Rem --- eWON start section: FTP_Data
+Rem --- eWON user (start)
+SendAllData:
+T$ = Time$
+year$ = T$(7 To 10)
+mon$ = T$(4 To 5)
+date$ = T$(1 To 2)
+hour$ = T$(12 To 13)
+min$ = T$(15 To 16)
+sec$ = T$(18 To 19)
+  
+FileNameLogs$ =  "Centrica/West/Weekly_Logs-" + year$ + "-" + mon$ + "-" + date$ + ".csv"
+FileNameEvents$ = "Centrica/West/Weekly_Events-" + year$ + "-" + mon$ + "-" + date$ + ".csv"
+PUTFTP FileNameLogs$,"[$dtHT$ftT$st_d1$et_s0$flB]"
+PUTFTP FileNameEvents$,"[$dtEV$st_d1$et_s0$ut$ut$ftT]"
+Print "FTP Logs Sent"
+Print "FTP Event Sent"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: FTP_Data
+Rem --- eWON start section: Check Emails
+Rem --- eWON user (start)
+Check_for_Emails:
+//Check_UPS
+Goto "Email_Fire"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Check Emails
+Rem --- eWON start section: Fire Emails
+Rem --- eWON user (start)
+Email_Fire:
+IF (PLC_IO_Fire_Suppresion@) THEN
+  IF (Fire_Email_Flag% = 0) THEN
+    Fire_Email_Flag% = 1
+    @send_email_fire(Fire_Email_Flag%)            
+  ENDIF   
+ENDIF
+IF NOT(PLC_IO_Fire_Suppresion@) THEN   
+    IF (Fire_Email_Flag% = 1) THEN
+      Fire_Email_Flag% = 0
+      Fire_Email_2_Flag% = 0
+      @send_email_fire(Fire_Email_Flag%)    
+    ENDIF
+ENDIF
+Print "PLC_IO_Fire_Suppresion:"
+Print PLC_IO_Fire_Suppresion@
+Print "Fire_Email_Flag:"
+Print Fire_Email_Flag%
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Fire Emails
+Rem --- eWON start section: Email Functions
+Rem --- eWON user (start)
+FUNCTION send_email_fire($fire_mode%)  
+  Mes1$ = "Virtue Notification Centrica West" + NP$ + "Fire Suppression: "
+  Mes2$ = ""
+  Subject$ = ""
+  IF($fire_mode% = 0) THEN
+    Mes2$ = "Deactivated"
+    Subject$ = "Virtue Fire Suppression END"
+  ELSE
+    Mes2$ = "Activated" + NP$ + "INVESTIGATE EXTERNAL ALARMS/STATUS PANEL - DO NOT ENTER CONTAINER" + NP$ + "ALERT FIRE BRIGADE" + NP$ + "PREPARE TO EVACUATE BUILDING" + NP$
+    Mes2$ = Mes2$ + "Stage 1 (Smoke Detection) - There will be a clear high pitched digital sounder beacon." + NP$ + "Stage 2 (Optical and Ionisation Detection) -"
+    Mes2$ = Mes2$ + " an additional fire bell will be triggered in parallel." + NL$
+    Mes2$ = Mes2$ + "The external status panel outside container DC personnel door, will show the 'Immanent' LED illuminated if Stage 2 is triggered." + NP$
+    Mes2$ = Mes2$ + "Please call Powerstar to assist in diagnosing the issue +44 (0) 1142 050 770"      
+   
+    Subject$ = "Virtue Fire Suppression: INVESTIGATE"
+  ENDIF  
+  
+  Msg$ = Mes1$ + Mes2$
+  Print Msg$
+  
+  SENDMAIL FireList$,"", Subject$, Msg$
+  Print"Fire email 1 sent"
+ENDFN
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Email Functions
+Rem --- eWON start section: BMS Emails
+Rem --- eWON user (start)
+Email_BMS_MAx_T_Alarm:
+IF (BMS_Max_Cell_T@>50) Then
+    BMS_Max_Cell_T_Alarm@=1
+    Print"BMS email 1 sent"
+ELSE
+    BMS_Max_Cell_T_Alarm@=0
+ENDIF
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: BMS Emails

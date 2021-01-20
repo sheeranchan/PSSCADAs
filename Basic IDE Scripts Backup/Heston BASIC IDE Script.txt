@@ -1,0 +1,170 @@
+Rem --- eWON start section: Init
+Rem --- eWON user (start)
+ewon_init_section:
+//Init Session: add the alarm variable
+alarm% = 0
+//faults alarm
+faults1% = 0
+faults2% = 0
+faults3% = 0
+faults4% = 0
+//set 60 second as per cycle for checking overall alarm and fault
+TSET 1, 60
+TSET 2, 60
+TSET 3, 60
+TSET 4, 60
+ONTIMER 1, "Goto Alarm_service"
+ONTIMER 2, "Goto Fault_service"
+ONTIMER 3, "Goto SOC_service"
+ONTIMER 4, "Goto Battery_V_service"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Init
+Rem --- eWON start section: Alarm_Flag
+Rem --- eWON user (start)
+//Alarm Bits & Alarm Check: Alarm_Mem
+//ATS Alarms
+Alarm_service:
+//print alarm%
+alarm% = alarm% + ATS_Alarm_1_Low_Battery@
+alarm% = alarm% + ATS_Alarm_2_SPD@
+alarm% = alarm% + ATS_Alarm_3_Batt_Full@
+alarm% = alarm% + ATS_Alarm_4_Batt_Empty@
+alarm% = alarm% + ATS_Alarm_5_Batt_Temp@
+alarm% = alarm% + ATS_Alarm_6_Battery_Current@
+//The overall alarmy flag
+//If any alarms, then tag Alarm_Mem should be marked as true
+//otherwise false
+//print alarm%
+IF (alarm%) THEN
+  Alarm_Mem@ = 1
+ELSE
+  Alarm_Mem@ = 0
+ENDIF
+//print Alarm_Mem@
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Alarm_Flag
+Rem --- eWON start section: Fault_Flag
+Rem --- eWON user (start)
+//Fault 1: ATS faults
+Fault_service:
+faults1% = faults1% + ATS_Fault_1@
+faults1% = faults1% + ATS_Fault_2@
+faults1% = faults1% + ATS_Fault_3@
+faults1% = faults1% + ATS_Fault_4@
+faults1% = faults1% + ATS_Fault_5@
+faults1% = faults1% + ATS_Fault_6@
+faults1% = faults1% + ATS_Fault_7@
+faults1% = faults1% + ATS_Fault_8@
+faults1% = faults1% + ATS_Fault_9@
+faults1% = faults1% + ATS_Fault_10@
+faults1% = faults1% + ATS_Fault_11@
+faults1% = faults1% + ATS_Fault_12@
+faults1% = faults1% + ATS_Fault_13@
+faults1% = faults1% + ATS_Fault_14@
+faults1% = faults1% + ATS_Fault_15@
+faults1% = faults1% + ATS_Fault_16@
+faults1% = faults1% + ATS_Fault_17@
+faults1% = faults1% + ATS_Fault_18@
+faults1% = faults1% + ATS_Fault_19@
+faults1% = faults1% + ATS_Fault_20@  
+//Fault 2: PCS faults
+faults2% = faults2% + PCS_Fault_1@
+faults2% = faults2% + PCS_Fault_2@
+faults2% = faults2% + PCS_Fault_3@
+faults2% = faults2% + PCS_Fault_4@
+faults2% = faults2% + PCS_Fault_5@
+faults2% = faults2% + PCS_Fault_6@
+faults2% = faults2% + PCS_Fault_7@
+faults2% = faults2% + PCS_Fault_8@
+faults2% = faults2% + PCS_Fault_9@
+faults2% = faults2% + PCS_Fault_10@
+faults2% = faults2% + PCS_Fault_11@
+faults2% = faults2% + PCS_Fault_12@
+faults2% = faults2% + PCS_Fault_13@
+faults2% = faults2% + PCS_Fault_14@
+faults2% = faults2% + PCS_Fault_15@
+faults2% = faults2% + PCS_Fault_16@
+faults2% = faults2% + PCS_Fault_17@
+faults2% = faults2% + PCS_Fault_18@
+faults2% = faults2% + PCS_Fault_19@
+faults2% = faults2% + PCS_Fault_20@
+faults2% = faults2% + PCS_Fault_21@
+faults2% = faults2% + PCS_Fault_22@
+faults2% = faults2% + PCS_Fault_23@
+faults2% = faults2% + PCS_Fault_24@
+faults2% = faults2% + PCS_Fault_25@
+faults2% = faults2% + PCS_Fault_26@
+faults2% = faults2% + PCS_Fault_27@
+faults2% = faults2% + PCS_Fault_28@
+faults2% = faults2% + PCS_Fault_29@
+faults2% = faults2% + PCS_Fault_30@
+faults2% = faults2% + PCS_Fault_31@
+faults2% = faults2% + PCS_Fault_32@
+faults2% = faults2% + PCS_Fault_33@
+faults2% = faults2% + PCS_Fault_34@
+faults2% = faults2% + PCS_Fault_35@
+faults2% = faults2% + PCS_Fault_36@
+faults2% = faults2% + PCS_Fault_37@
+faults2% = faults2% + PCS_Fault_38@
+faults2% = faults2% + PCS_Fault_39@
+faults2% = faults2% + PCS_Fault_40@
+faults2% = faults2% + PCS_Fault_41@
+faults2% = faults2% + PCS_Fault_42@
+faults2% = faults2% + PCS_Fault_43@
+faults2% = faults2% + PCS_Fault_44@
+faults2% = faults2% + PCS_Fault_45@
+IF(faults1% > 0) THEN
+	PCS_Fault_Word_1@ = 1
+ELSE
+	PCS_Fault_Word_1@ = 0
+ENDIF
+IF(faults2% > 0) THEN
+	PCS_Fault_Word_2@ = 1
+ELSE
+	PCS_Fault_Word_2@ = 0
+ENDIF
+IF (ATS_Fault_Word_1@ = 1) THEN
+  faults3% = 1
+ ELSE
+  faults3% = 0  
+ENDIF
+IF(PCS_Fault_Word_1@ OR PCS_Fault_Word_2@) THEN
+  	faults4% = 1
+ ELSE
+    faults4% = 0
+ENDIF
+//any faults will make the fault flag below be true
+IF(faults1% OR faults2% OR faults3% OR faults4%) THEN
+	Fault_Mem = 1
+ELSE
+	Fault_Mem = 0
+ENDIF	
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Fault_Flag
+Rem --- eWON start section: SOC_Flag
+Rem --- eWON user (start)
+SOC_service:
+IF (ATS_SoC@<40) OR (ATS_SoC@>90) THEN
+  	SOC_Alarm_Mem@=1
+ELSE
+  	SOC_Alarm_Mem@=0
+ENDIF
+Print SOC_Alarm_Mem@
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: SOC_Flag
+Rem --- eWON start section: Battery_V_Flag
+Rem --- eWON user (start)
+Battery_V_service:
+IF (BMS_Voltage@<770) OR (BMS_Voltage@>810) THEN
+  	BMS_V_Alarm_Mem@=1
+ELSE
+  	BMS_V_Alarm_Mem@=0
+ENDIF
+Print BMS_V_Alarm_Mem@
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Battery_V_Flag

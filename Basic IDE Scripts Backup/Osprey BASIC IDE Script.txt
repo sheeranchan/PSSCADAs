@@ -1,0 +1,691 @@
+Rem --- eWON start section: Cyclic Section
+eWON_cyclic_section:
+Rem --- eWON user (start)
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Cyclic Section
+Rem --- eWON start section: Init Section
+ewon_init_section:
+Rem --- eWON user (start)
+//*pcs_h_str$ = ""
+//pcs_m_str$ = "" 
+//pcs_s_str$ = "" 
+//pcs_time_str$ = ""
+//pcs_time% = 0 
+//time_val% = 0
+//email_sent_UPS% = 0
+//start_email_timer% = 0
+//email_warning% = 0
+//UPS_email_customer% = 0
+///NL$ = (CHR$(13)+CHR$(10))
+///NP$ = NL$ + NL$   
+//E1$ = "tom.csmith@powerstar.com"
+//E2$ = "solon.mardapittas@powerstar.com"
+//E3$ = "lee.hudson@powerstar.com"
+//day_of_week% = 0
+//pcs_timer_end_1% = 0
+//pcs_timer_end_2% = 0
+Service_State% = 0
+Set_On% = 0 
+Level_Dir% = 0
+Import_ok% = 0
+Export_ok% = 0
+Import_P = 0
+Export_P = 0
+charge_limit = 96
+discharge_limit = 18
+min_soc = 0
+max_soc = 0
+TSET 1,1
+TSET 2,1
+TSET 3,10
+TSET 4,5
+ONTIMER 4, "goto Run_service"
+//ONTIMER 1, "goto Fault_Check" // Also sets up the PCS Time String
+//ONTIMER 2, "goto Power_Follow"
+//ONTIMER 3, "goto get_dow"
+ONDATE 5,"40 23 * * sun","goto SendAllData"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Init Section
+Rem --- eWON start section: Check_Faults
+Rem --- eWON user (start)
+////Fault_Check:
+//If ((ATS_Fault_Word_1@ > 0) OR (PCS_Fault_Word_1@ > 0) OR (PCS_Fault_Word_2@ > 0) OR (Comms_ATS@ <> 1) OR (Comms_PCS@ <> 1)) Then
+//	Fault_Mem@ = 1
+//Else
+//	Fault_Mem@ = 0
+//ENDIF
+//I% = ATS_Sys_State@#5 
+//IF I% = 1 THEN
+ // ATS_Sys_State_Str@ = 5
+//ELSE
+ // I% = ATS_Sys_State@#8 
+//  IF I% = 1 THEN
+//    ATS_Sys_State_Str@ = 8
+ // ELSE
+  //  I% = ATS_Sys_State@#7 
+   // IF I% = 1 THEN
+    //  ATS_Sys_State_Str@ = 7
+    //ELSE
+      //I% = ATS_Sys_State@#6
+      //IF I% = 1 THEN
+        //ATS_Sys_State_Str@ = 6
+      //ELSE
+        //I% = ATS_Sys_State@#0
+        //IF I% = 1 THEN
+          //ATS_Sys_State_Str@ = 0
+        //ELSE
+          //I% = ATS_Sys_State@#1
+          //IF I% = 1 THEN
+            //ATS_Sys_State_Str@ = 1
+          //ELSE
+            //I% = ATS_Sys_State@#2
+            //IF I% = 1 THEN
+              //ATS_Sys_State_Str@ = 2
+            //ELSE        
+             // I% = ATS_Sys_State@#3
+              //IF I% = 1 THEN
+                //ATS_Sys_State_Str@ = 3
+              //ELSE
+                //I% = ATS_Sys_State@#4
+                //IF I% = 1 THEN
+                  //ATS_Sys_State_Str@ = 4
+                //ENDIF
+              //ENDIF
+            //ENDIF
+          //ENDIF
+        //ENDIF  
+      //ENDIF
+    //ENDIF
+  //ENDIF
+//ENDIF  
+//ATS_UPS_MODE@ = PCS_Status_1@#13
+//ATS_UPS_MODE@ = TEST_MEM@
+//ATS_UPS_MODE@ = 1
+//E-MAIL Alerts
+//IF ATS_UPS_MODE@ THEN
+  //IF (UPS_email_customer% = 0) THEN
+    //UPS_email_customer% = 1
+    //@send_email_cust(UPS_email_customer%)        
+  //ENDIF  
+  
+  //IF NOT(email_sent_UPS%) THEN
+    //email_sent_UPS% = 1
+    //@send_email_eng()
+  //ENDIF
+  
+ // IF((email_warning% = 0) AND (ATS_SoC@ <= 15)) THEN
+   // email_warning% = 1
+    //@send_warning()
+  //ENDIF
+//ENDIF
+//IF NOT(ATS_UPS_MODE@) THEN
+  //  email_warning% = 0
+    //email_sent_UPS% = 0
+    //start_email_timer% = 0    
+    //IF (UPS_email_customer% = 1) THEN
+      //UPS_email_customer% = 0
+      //@send_email_cust(UPS_email_customer%)    
+  //ENDIF
+//ENDIF
+//IF email_sent_UPS% THEN
+  //IF start_email_timer% = 0 THEN
+    //start_email_timer% = 1
+    //time_save% = GETSYS PRG, "TIMESEC"
+  //ENDIF
+    
+  //IF start_email_timer% = 1 THEN
+    //current_time% = GETSYS PRG, "TIMESEC"
+    //IF ((current_time% - time_save%) >= (20 * 60)) THEN
+      //start_email_timer% = 0
+      //email_sent_UPS% = 0
+    //ENDIF
+    //print current_time% - time_save%
+  //ENDIF
+//ENDIF
+     
+  
+  
+// Gets PCS Time
+//pcs_h_str$ = SFMT PCS_TIME_H@,30,0,"%1d"
+//pcs_m_str$ = SFMT PCS_TIME_Min@,30,0,"%1d"
+//pcs_s_str$ = SFMT PCS_TIME_S@,30,0,"%1d"
+//pcs_time_str$ = pcs_h_str$ + ":" + pcs_m_str$ + ":" + pcs_s_str$
+//pcs_time% = FCNV pcs_time_str$,40
+//Goto Fault_Bits
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Check_Faults
+Rem --- eWON start section: return_to_standby
+Rem --- eWON user (start)
+//FUNCTION rtn_to_standby
+  //IF (PCS_Set_Mode@ <> 5) THEN
+    //  PCS_Set_Mode@ = 4
+      //Print "Return to stanby mode: ";
+      //Print PCS_Set_Mode@
+ // ENDIF
+//ENDFN
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: return_to_standby
+Rem --- eWON start section: Fault Bits
+Rem --- eWON user (start)
+//Fault_Bits:
+//ATS_Fault_1@ = ATS_Fault_Word_1@#0
+//ATS_Fault_2@ = ATS_Fault_Word_1@#1
+//ATS_Fault_3@ = ATS_Fault_Word_1@#2
+//ATS_Fault_4@ = ATS_Fault_Word_1@#3
+//ATS_Fault_5@ = ATS_Fault_Word_1@#10
+//ATS_Fault_6@ = ATS_Fault_Word_1@#11
+//ATS_Fault_7@ = ATS_Fault_Word_1@#13
+//ATS_Fault_8@ = ATS_Fault_Word_1@#14
+//ATS_Fault_9@ = ATS_Fault_Word_1@#15
+//ATS_Fault_10@ = ATS_Fault_Word_1@#17
+//ATS_Fault_11@ = ATS_Fault_Word_1@#18
+//ATS_Fault_12@ = ATS_Fault_Word_1@#21
+//ATS_Fault_13@ = ATS_Fault_Word_1@#22
+//ATS_Fault_14@ = ATS_Fault_Word_1@#23
+//ATS_Fault_15@ = ATS_Fault_Word_1@#24
+//ATS_Fault_16@ = ATS_Fault_Word_1@#25
+//ATS_Fault_17@ = ATS_Fault_Word_1@#26
+//ATS_Fault_18@ = ATS_Fault_Word_1@#27
+//ATS_Fault_19@ = ATS_Fault_Word_1@#28
+//ATS_Fault_20@ = ATS_Fault_Word_1@#29
+//PCS_Fault_1@ = PCS_Fault_Word_1@#0
+//PCS_Fault_2@ = PCS_Fault_Word_1@#1
+//PCS_Fault_3@ = PCS_Fault_Word_1@#2
+//PCS_Fault_4@ = PCS_Fault_Word_1@#3
+//PCS_Fault_5@ = PCS_Fault_Word_1@#4
+//PCS_Fault_6@ = PCS_Fault_Word_1@#5
+//PCS_Fault_7@ = PCS_Fault_Word_1@#6
+//PCS_Fault_8@ = PCS_Fault_Word_1@#7
+//PCS_Fault_9@ = PCS_Fault_Word_1@#8
+//PCS_Fault_10@ = PCS_Fault_Word_1@#9
+//PCS_Fault_11@ = PCS_Fault_Word_1@#10
+//PCS_Fault_12@ = PCS_Fault_Word_1@#11
+//PCS_Fault_13@ = PCS_Fault_Word_1@#12
+//PCS_Fault_14@ = PCS_Fault_Word_1@#13
+//PCS_Fault_15@ = PCS_Fault_Word_1@#14
+//PCS_Fault_16@ = PCS_Fault_Word_1@#15
+//PCS_Fault_17@ = PCS_Fault_Word_1@#16
+//PCS_Fault_18@ = PCS_Fault_Word_1@#17
+//PCS_Fault_19@ = PCS_Fault_Word_1@#18
+//PCS_Fault_20@ = PCS_Fault_Word_1@#19
+//PCS_Fault_21@ = PCS_Fault_Word_1@#20
+//PCS_Fault_22@ = PCS_Fault_Word_1@#21
+//PCS_Fault_23@ = PCS_Fault_Word_1@#22
+//PCS_Fault_24@ = PCS_Fault_Word_1@#23
+//PCS_Fault_25@ = PCS_Fault_Word_1@#24
+//PCS_Fault_26@ = PCS_Fault_Word_1@#25
+//PCS_Fault_27@ = PCS_Fault_Word_1@#26
+//PCS_Fault_28@ = PCS_Fault_Word_1@#27
+//PCS_Fault_29@ = PCS_Fault_Word_1@#28
+//PCS_Fault_30@ = PCS_Fault_Word_2@#0
+//PCS_Fault_31@ = PCS_Fault_Word_2@#1
+//PCS_Fault_32@ = PCS_Fault_Word_2@#2
+//PCS_Fault_33@ = PCS_Fault_Word_2@#3
+//PCS_Fault_34@ = PCS_Fault_Word_2@#4
+//PCS_Fault_35@ = PCS_Fault_Word_2@#5
+//PCS_Fault_36@ = PCS_Fault_Word_2@#6
+//PCS_Fault_37@ = PCS_Fault_Word_2@#9
+//PCS_Fault_38@ = PCS_Fault_Word_2@#10
+//PCS_Fault_39@ = PCS_Fault_Word_2@#11
+//PCS_Fault_40@ = PCS_Fault_Word_2@#15
+//PCS_Fault_41@ = PCS_Fault_Word_2@#16
+//PCS_Fault_42@ = PCS_Fault_Word_2@#17
+//PCS_Fault_43@ = PCS_Fault_Word_2@#18
+//PCS_Fault_44@ = PCS_Fault_Word_2@#19
+//PCS_Fault_45@ = PCS_Fault_Word_2@#20
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Fault Bits
+Rem --- eWON start section: email
+Rem --- eWON user (start)
+// 20 Minute info
+//FUNCTION send_email_eng  
+//  IF (PCS_DC_P@ > 0) THEN
+//    divisor% = PCS_DC_P@
+//    meter_float = PCS_DC_P@
+//  ELSE
+//    divisor% = Meter_Load_Act_Pow@
+//    meter_float = Meter_Load_Act_Pow@
+//  ENDIF
+//  ups_time% = (284 * 60 * (ATS_SoC@ / 100) * (ATS_SoH@ / 100) * 0.9) / meter_float
+//  M2$ = SFMT ups_time%,30,0,"%1d"  
+//  M3$ = SFMT meter_float,20,4,"%f"
+//  SOC$ =  SFMT ATS_SoC@,20,4,"%f"
+//  
+//  M1$ = "Virtue UPS Mode Alert" + NL$ + "UPS Mode: Activated" + NP$ + "You have "  
+//  M1$ = M1$ + M2$ + " minutes of power left at the current load of " + M3$ + " kW"
+//  M1$ = M1$ + NP$ + "State of Charge is: " + SOC$ + "%"
+//   
+//  Message$ = M1$   
+// 
+//  //SENDMAIL E1$, E2$;E3$, "Virtue UPS Mode Alert", Message$
+//  SENDMAIL E1$, "", "Virtue UPS Mode Alert", Message$
+//  Print"Engineer email sent"
+//ENDFN
+//// Back to normal
+//FUNCTION send_email_cust($ups_mode%)  
+//  Mes1$ = "Virtue Customer Notification" + NP$ + "UPS "
+//  Mes2$ = ""
+//  IF($ups_mode% = 0) THEN
+//    Mes2$ = "Deactivated. Mains Power restored"+ NP$ + "System status: Standby"
+//  ELSE
+//    Mes2$ = "Activated, Facility running on batteries" + NP$ + "System status: Running"
+//  ENDIF  
+//  
+//   
+//  Msg$ = Mes1$ + Mes2$ 
+//  //SENDMAIL E1$, "solon.mardapittas@powerstar.com;lee.hudson@powerstar.com", "Virtue UPS Mode Alert", Msg$
+//  SENDMAIL E1$, "", "Virtue UPS Mode Alert", Msg$
+//  
+//  Print"Customer email sent"
+//  
+// //@send_email_cust()
+//ENDFN
+//// Low Battery Warning
+//FUNCTION send_warning()    
+//  IF (PCS_DC_P@ > 0) THEN
+//    divisor% = PCS_DC_P@
+//    meter_float = PCS_DC_P@
+//  ELSE
+//    divisor% = Meter_Load_Act_Pow@
+//    meter_float = Meter_Load_Act_Pow@
+//    IF(divisor% < 1) THEN
+//      divisor% = 1
+//    ENDIF  
+//  ENDIF
+//  
+//  ups_time% = (36 * 60 * (ATS_SoC@ / 100) * (ATS_SoH@ / 100) * 0.9) / divisor%  
+//  M2$ = SFMT ups_time%,30,0,"%1d"
+//  M3$ = SFMT meter_float,20,4,"%f" 
+//  SOC$ =  SFMT ATS_SoC@,20,4,"%f" 
+//  
+//  M1$ = "Virtue UPS Mode Alert" + NL$ + "Battery Low Warning" + NP$ + "You have "  
+//  M1$ = M1$ + M2$ + " minutes of power left at the current load of " + M3$ + " kW"
+//  M1$ = M1$ + NP$ + "State of Charge is: " + SOC$ + "%"   
+//  MW$ = "Recommended Action: Shut down critical applications"
+//  M1$ = M1$ + NP$ + MW$
+//  Message$ = M1$  
+// 
+// //SENDMAIL "tom.csmith@powerstar.com", "solon.mardapittas@powerstar.com;lee.hudson@powerstar.com", "Virtue UPS LOW BATTERY WARNING", Message$
+// SENDMAIL E1$, "", "Virtue UPS LOW BATTERY WARNING", Message$
+//  Print"15% Warning email sent"
+//ENDFN
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: email
+Rem --- eWON start section: charge_limits
+Rem --- eWON user (start)
+charge_limiter:
+// */ This stop the battery from overcharging */
+//IF ATS_SoC@ >= charge_limit THEN 
+//	IF ((PCS_Set_Mode@ = 3) AND (PCS_Set_CP_AC@ < 0)) THEN
+//		Print "High SoC"
+//    @rtn_to_standby()
+//	ENDIF
+//	
+//	IF ((PCS_Set_Mode@ = 2) AND (PCS_Set_CP_DC@ < 0)) THEN
+//		Print "High SoC"
+//    @rtn_to_standby()
+//	ENDIF
+//	
+//	IF ((PCS_Set_Mode@ = 0) AND (PCS_Set_CC@ < 0)) THEN
+//		Print "High SoC"
+//    @rtn_to_standby()
+//	ENDIF
+//	
+//	IF ((PCS_Set_Mode@ = 1) AND (PCS_Set_CV@	>= BMS_Voltage@)) THEN
+//		Print "High SoC"
+//    @rtn_to_standby()
+//	ENDIF
+//ENDIF
+//REM */ This stop the battery from undercharging */
+//IF ATS_SoC@ <= discharge_limit THEN 
+//	IF ((PCS_Set_Mode@ = 3) AND (PCS_Set_CP_AC@ > 0)) THEN
+//		Print "Low SoC"
+//    @rtn_to_standby()
+//	ENDIF
+//	
+//	IF ((PCS_Set_Mode@ = 2) AND (PCS_Set_CP_DC@ > 0)) THEN
+//		Print "Low SoC"
+//    @rtn_to_standby()
+//	ENDIF
+//	
+//	IF ((PCS_Set_Mode@ = 0) AND (PCS_Set_CC@ > 0)) THEN
+//		Print "Low SoC"
+//    @rtn_to_standby()
+//	ENDIF
+//	
+//	IF ((PCS_Set_Mode@ = 1) AND (PCS_Set_CV@	<= BMS_Voltage@)) THEN
+//		Print "Low SoC"
+//    @rtn_to_standby()
+//	ENDIF
+//ENDIF
+////goto charge_cycle
+//  
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: charge_limits
+Rem --- eWON start section: power_following
+Rem --- eWON user (start)
+//Power_Follow:
+//IF ((day_of_week% <> 0) AND (day_of_week% <> 6)) THEN
+//  IF ATS_SoC@ > 11 THEN
+//    power_follow_val% = Load_Meter_Act_Pow@ * 7
+//    power_follow_val% = power_follow_val% * 7 // x 0.9 x 10
+//    ATS_Power_0@ = power_follow_val%
+//  ELSE
+//    IF ATS_Power_0@ <> 0 THEN
+//      ATS_Power_0@ = 0
+//    ENDIF
+//  ENDIF
+//ELSE
+//  IF ATS_Power_0@ <> 0 THEN
+//    ATS_Power_0@ = 0
+//  ENDIF
+//ENDIF
+//IF (ATS_SoC@ > 96) AND (ATS_Power_1@ < 0) THEN
+//  ATS_Power_1@ = 0
+//ELSE
+//  ATS_Power_1@ = -300
+//ENDIF
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: power_following
+Rem --- eWON start section: Day of week
+Rem --- eWON user (start)
+////get_dow:
+//// Get day of week
+//time_val$ = TIME$
+//day_of_week% = DOW time_val$ 
+////0 = sunday
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Day of week
+Rem --- eWON start section: FTP Data
+Rem --- eWON user (start)
+SendAllData:
+//T$ = Time$
+//year$ = T$(7 To 10)
+//mon$ = T$(4 To 5)
+//date$ = T$(1 To 2)
+//hour$ = T$(12 To 13)
+//min$ = T$(15 To 16)
+//sec$ = T$(18 To 19)
+  
+//FileNameLogs$ =  "Osprey/Weekly_Logs-" + year$ + "-" + mon$ + "-" + date$ + ".csv"
+//FileNameEvents$ = "Osprey/Weekly_Events-" + year$ + "-" + mon$ + "-" + date$ + ".csv"
+//PUTFTP FileNameLogs$,"[$dtHT$ftT$st_d7$et_s0$flB]"
+//PUTFTP FileNameEvents$,"[$dtEV$st_d7$et_s0$ut$ut$ftT]"
+//Print "FTP Logs Sent"
+//Print "FTP Event Sent"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: FTP Data
+Rem --- eWON start section: RUN_Service
+Rem --- eWON user (start)
+Run_service:
+// workout min and max SOC
+min_soc = BMS_System_SOC@
+max_soc = BMS_System_SOC@
+// Limit charge or discharge at soc limit level
+IF (min_soc < 18.0) AND (EMS_SOC_Low@ =0) THEN		
+			EMS_SOC_Low@ = 1	
+			EMS_SOC_Ok@ = 0  // No running service... l.e
+      PCS_Set_Mode@ = 3    // Set Mode to 3 
+      PCS_Set_CP_AC@ = -500    // discacharge 
+ENDIF
+IF (min_soc >= 20.0) AND (EMS_SOC_Low@ = 1) THEN		
+			EMS_SOC_Low@ = 0	
+			EMS_SOC_Ok@ = 1  // No running service... l.e
+      PCS_Set_Mode@ = 3    // Set Mode to 3 
+      PCS_Set_CP_AC@ = 0    // discacharge 
+ENDIF
+ 
+IF (max_soc > 92.0) AND (EMS_SOC_High@ = 0) THEN		
+			EMS_SOC_High@ = 1	
+			EMS_SOC_Ok@ = 0  // No running service... l.e
+      PCS_Set_Mode@ = 3    // Set Mode to 3 
+      PCS_Set_CP_AC@ = 500    // discacharge 
+ENDIF
+IF (max_soc <= 90.0) AND (EMS_SOC_High@ = 1) THEN		
+			EMS_SOC_High@ = 0	
+			EMS_SOC_Ok@ = 1  // No running service... l.e
+      PCS_Set_Mode@ = 3    // Set Mode to 3 
+      PCS_Set_CP_AC@ = 0    // discacharge 
+ENDIf
+IF (max_soc < 90.0) AND (min_soc > 20.0) THEN		
+			EMS_SOC_High@ = 0	
+			EMS_SOC_Ok@ = 1  // No running service... l.e
+      EMS_SOC_Low@ = 0	
+ 
+ENDIf
+// Determin DUoS red, amber and Green window
+ IF (ATS_Time_H@ >= 8) AND (ATS_Time_H@ < 16) THEN 
+	   Service_State%     = 1            // morning amber window
+ ENDIF
+IF (ATS_Time_H@ >= 16) AND (ATS_Time_H@ < 19) THEN
+	  Service_State%     = 2           // red window
+ENDIF  
+IF (ATS_Time_H@ >= 19) AND (ATS_Time_H@ < 22) THEN
+    Service_State%     = 3          // evening amber window
+ ENDIF
+IF (ATS_Time_H@ >= 22) OR (ATS_Time_H@ < 8) THEN
+    Service_State%     = 4         // green window
+ENDIF
+IF EMS_SOC_Ok@ = 1 THEN          // if soc within correct level...
+   Import_P = 415.0 - Load_Meter_Act_Pow@     // MAX import power
+   IF Load_Meter_Act_Pow@ < 300 Then          // MAX export power
+      Export_P = Load_Meter_Act_Pow@
+   ELSE
+      Export_P = 300
+   ENDIf
+    // import export status
+   If Import_P > 50 Then 
+        Import_ok% = 1
+    Else
+        Import_ok% = 0
+    ENDIF
+    
+    If Export_P > 150 Then 
+        Export_ok% = 1
+    Else
+        Export_ok% = 0
+    ENDIF
+    
+//IF Service_State% = 1 THEN  // This part is added by Olivia on 2020.06.26 for remote control test begin
+//       Set_On%   = 1
+//	   IF  Set_On% THEN	     
+//		    IF  (max_soc <= 90.0) THEN    // check low limit is not breach and charge at 200KW		
+//			     If import_ok% = 1 THEN          // limit to export power
+//              PCS_Set_Mode@ = 3    // Set Mode to 3 
+//              PCS_Set_CP_AC@ = -150    // discacharge   
+//           ELSE
+//              PCS_Set_Mode@ = 3    // Set Mode to 3 
+//              PCS_Set_CP_AC@ = 0    // discacharge
+//           ENDIF   
+//		    ELSE
+//			       PCS_Set_Mode@ = 3    // Set Mode to 3 
+//             PCS_Set_CP_AC@ = 0    // discacharge 
+//            Set_On% = 0	
+//		    ENDIF
+//ENDIF    //This part is added by Olivia on 2020.06.26 for remote control test end
+
+
+//IF Service_State% = 1 THEN  // This part is added by Olivia on 2020.06.26 for remote control test begin
+//       Set_On%   = 1
+//	   IF  Set_On% THEN	     
+//		    IF  (min_soc >= 20.0) THEN    // check low limit is not breach and discharge at 250KW		
+//			     If Export_ok% = 1 THEN          // limit to export power
+//              PCS_Set_Mode@ = 3    // Set Mode to 3 
+//              PCS_Set_CP_AC@ = 100    // discacharge 
+//  
+//           ELSE
+//              PCS_Set_Mode@ = 3    // Set Mode to 3 
+//              PCS_Set_CP_AC@ = 0    // discacharge 
+//           ENDIF   
+//		    ELSE
+//			      PCS_Set_Mode@ = 3    // Set Mode to 3 
+//            PCS_Set_CP_AC@ = 0    // discacharge 
+//            Set_On% = 0	
+//		    ENDIF
+//	   ENDIF
+//  ENDIF  //This part is added by Olivia on 2020.06.26 for remote control test end
+
+
+
+   
+ //  IF Service_State% = 1 THEN            // if it's in the morning amber window....
+     // soc_dif= max_soc - min_soc         // calculate soc difference
+    //  soc_dif= soc_dif/min_soc
+    //  soc_dif= soc_dif * 100 
+   
+    //  IF soc_dif >= 5.0 THEN                               // if difference is greater or equal to 5% than...
+       //   IF (max_soc >= 90.0) THEN       // if highest soc greater that 90%, discharge at 100kw
+			 //       If  Export_ok% = 1 THEN          // limit to export power
+        //          EMS_Power_Setpoint@  = 1000   
+        //      ELSE
+         //         EMS_Power_Setpoint@  = 0 
+         //     ENDIF
+				//         Level_Dir% = 1
+       //   ELSE
+        //      IF (max_soc <= 80.0) THEN                // check highest soc, if below 80% than charge at 100KW	
+			   //        If  Import_ok% = 1 THEN          // limit to import power
+         //            EMS_Power_Setpoint@  = -1000   
+          //       ELSE
+           //          EMS_Power_Setpoint@  = 0 
+          //       ENDIF  
+				     //     Level_Dir% = 0	
+			    //    ELSE                                               // else, continiou with direction set until limit is reached.
+				    //      IF Level_Dir% = 1 THEN
+            //      	 If  Export_ok% = 1 THEN          // limit to import power
+            //             EMS_Power_Setpoint@  = 1000   
+            //         ELSE
+                     //    EMS_Power_Setpoint@  = 0 
+                 //    ENDIF  
+              //    ELSE
+               //   	 If  Import_ok% = 1 THEN          // limit to import power
+               //          EMS_Power_Setpoint@  = -1000   
+                //     ELSE
+                //         EMS_Power_Setpoint@  = 0 
+                //     ENDIF  
+               //   ENDIF  	
+			//        ENDIF
+     //     ENDIF
+		//   ELSE                                                   // if within 5% bounderay...
+		//      IF (max_soc < 90.0) THEN               // if soc is below safe limit high, charge and be ready fo DUoS
+			 //      If  Import_ok% = 1 THEN          // limit to import power
+           //      EMS_Power_Setpoint@  = -1000   
+          //    ELSE
+           //      EMS_Power_Setpoint@  = 0 
+        //      ENDIF  
+    //      ELSE                                               // else do nothing
+			//       EMS_Power_Setpoint@  = 0	
+		//      ENDIF 	
+	//	   ENDIF  
+	//	   Set_On%   = 0                             // Clear Set flag ready for DUoS at 16h30
+ //  ENDIF
+   //
+   
+  If Service_State% = 2 THEN        // 16h00 ready for DUoS discharge
+	   IF (ATS_Time_H@ = 16) AND (ATS_Time_min@ = 30) THEN                   // Start discharge at 16h30
+		    Set_On%   = 1
+	   ENDIF
+	   IF  Set_On% THEN	     
+		    IF  (min_soc >= 20.0) THEN    // check low limit is not breach and discharge at 250KW		
+			     If Export_ok% = 1 THEN          // limit to export power
+              PCS_Set_Mode@ = 3    // Set Mode to 3 
+              PCS_Set_CP_AC@ = 1500    // discacharge 
+  
+           ELSE
+              PCS_Set_Mode@ = 3    // Set Mode to 3 
+              PCS_Set_CP_AC@ = 0    // discacharge 
+           ENDIF   
+		    ELSE
+			      PCS_Set_Mode@ = 3    // Set Mode to 3 
+            PCS_Set_CP_AC@ = 0    // discacharge 
+            Set_On% = 0	
+		    ENDIF
+	   ENDIF
+  ENDIF
+  //
+  
+//   IF Service_State% = 3 THEN            // if it's in the evening amber window....
+  //    soc_dif= max_soc - min_soc         // calculate soc difference
+  //    soc_dif= soc_dif/min_soc
+  //    soc_dif= soc_dif * 100 
+      
+     // IF soc_dif >= 5.0 THEN                               // if difference is greater or equal to 5% than...
+        //  IF (min_soc >= 30.0) THEN       // if lowest soc greater that 30%, discharge at 100kw
+			    //    If  Export_ok% = 1 THEN          // limit to export power
+       //          EMS_Power_Setpoint@  = 1000   
+      //        ELSE
+      //           EMS_Power_Setpoint@  = 0 
+      //        ENDIF
+			//	         Level_Dir% = 1
+      //    ELSE
+        //      IF (max_soc <= 20.0) THEN                // check lowest soc, if below 280% than charge at 100KW	
+			    //       If  Import_ok% = 1 THEN          // limit to import power
+           //          EMS_Power_Setpoint@  = -1000   
+            //     ELSE
+             //        EMS_Power_Setpoint@  = 0 
+              //   ENDIF  
+				       //   Level_Dir% = 0	
+			      //  ELSE                                               // else, continiou with direction set until limit is reached.
+				       //   IF Level_Dir% = 1 THEN
+                  	// If  Export_ok% = 1 THEN          // limit to import power
+                   //      EMS_Power_Setpoint@  = 1000   
+                //     ELSE
+                 //        EMS_Power_Setpoint@  = 0 
+                //     ENDIF  
+              //    ELSE
+                 // 	 IF  Import_ok% = 1 THEN          // limit to import power
+                  //       EMS_Power_Setpoint@  = -1000   
+                //     ELSE
+                 //        EMS_Power_Setpoint@  = 0 
+              //       ENDIF  
+           //       ENDIF  	
+			 //       ENDIF
+   //       ENDIF
+//		   ELSE                                                   // if within 5% bounderay...
+//			    EMS_Power_Setpoint@  = 0	          // else do nothing
+//		   ENDIF  
+//		   Set_On%   = 0                             // Clear Set flag ready for DUoS at 16h30
+//   ENDIF
+	
+ 
+  If Service_State% = 4 THEN        // 16h00 ready for DUoS discharge
+	   IF (ATS_Time_H@ = 22)  THEN                   // Start charge at 22h00
+		    Set_On%   = 1
+	   ENDIF
+	   IF  Set_On% THEN	     
+		    IF  (max_soc <= 90.0) THEN    // check low limit is not breach and charge at 200KW		
+			     If import_ok% = 1 THEN          // limit to export power
+              PCS_Set_Mode@ = 3    // Set Mode to 3 
+              PCS_Set_CP_AC@ = -500    // discacharge   
+           ELSE
+              PCS_Set_Mode@ = 3    // Set Mode to 3 
+              PCS_Set_CP_AC@ = 0    // discacharge
+           ENDIF   
+		    ELSE
+			       PCS_Set_Mode@ = 3    // Set Mode to 3 
+             PCS_Set_CP_AC@ = 0    // discacharge 
+            Set_On% = 0	
+		    ENDIF
+	   ENDIF
+  ENDIF
+  
+	
+ENDIF
+ Print min_soc
+ Print Set_On%
+ Print PCS_Set_CP_AC@ 
+ Print Service_State% 
+ 
+  Print "service end done"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: RUN_Service

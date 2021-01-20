@@ -1,0 +1,161 @@
+Rem --- eWON start section: Cyclic Section
+eWON_cyclic_section:
+Rem --- eWON user (start)
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Cyclic Section
+Rem --- eWON start section: Init Section
+eWON_init_section:
+Rem --- eWON user (start)
+time_UPS_start% = 0
+time_UPS_current% = 0
+time_low_start% = 0
+time_low_current% = 0
+start_email_timer% = 0
+email_warning% = 0
+UPS_email_customer% = 0
+ ups_time%  = 0
+UPS_Firstpass%  = 0
+UPS_count% = 0
+email_sent_UPS% = 0
+min_soc = 0
+meter_float = 0
+ftp_counter% = 0
+PS_ftp_flag% = 0
+NL$ = (CHR$(13)+CHR$(10))
+NP$ = NL$ + NL$   
+SOC$ = NL$
+E1$ =  "leonard.emaki@powerstar.com;solon.mardapittas@powerstar.com;Jack.Blakeley@powerstar.com;richard.kerr@powerstar.com" 
+//  solon.mardapittas@powerstar.com;    "tom.csmith@powerstar.com;solon.mardapittas@powerstar.com;lee.hudson@powerstar.com;martin.cunnington@powerstar.com"
+//E2$ = "00447554383667@sms.talk2m.com"
+E2$ = "daniel.butler@aesseal.co.uk;mark.paramore@aesseal.co.uk;simon.sheaf@aesseal.co.uk;lindsay.moore@aesseal.co.uk;david.montero@aesseal.co.uk;montero.david@yahoo.co.uk"
+D$ = "07793591416,gsm,0;07710332686,gsm,0;07876791179,gsm,0;07919207640,gsm,0;07973314232,gsm,0;07889078303,gsm,0;07795694498,gsm,0"
+EM2$ = "00447554383667@sms.talk2m.com,00447795694498@sms.talk2m.com"
+
+TSET 1,10
+TSET 2,1
+TSET 3,2
+TSET 4,2
+//ONDATE 4,"1 0 * * MON","ftp_counter% = 1"//"GOTO SendData" // Every Sunday at 11:50 PM
+//ONDATE 4,"52 09 * * *","goto SendAllData"
+//ONDATE 5,"49 5 * * FRI","PS_ftp_flag% = 1" 
+//ONCHANGE "aaaa","ftp_counter% = 1"
+//ONCHANGE "TEMP_UPS","goto ups_alert"   //TEMP_UPS    UPS_MODE_ACTIVE
+ONTIMER 1, "goto UPS_Message"
+//ONTIMER 2, "goto Email_Check"
+//ONTIMER 3, "goto Faults_Calc"
+//ONTIMER 4, "goto PS_FTP"
+//ONDATE 6,"5 0 1 * *","GOTO PS_FTP" 
+
+//E-MAIL Alerts
+ONCHANGE "UPS_MODE_ACTIVE","goto ups_alert"   //TEMP_UPS    UPS_MODE_ACTIVE
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Init Section
+Rem --- eWON start section: Send All Data
+Rem --- eWON user (start)
+//SendAllData:
+//T$ = Time$
+//year$ = T$(7 To 10)
+//mon$ = T$(4 To 5)
+//date$ = T$(1 To 2)
+//hour$ = T$(12 To 13)
+//min$ = T$(15 To 16)
+//sec$ = T$(18 To 19)
+  
+//FileNameLogs$ =  "AESSEAL/Weekly_Logs-" + year$ + "-" + mon$ + "-" + date$ + ".csv"
+//FileNameEvents$ = "AESSEAL/Weekly_Events-" + year$ + "-" + mon$ + "-" + date$ + ".csv"
+//PUTFTP FileNameLogs$,"[$dtHT$ftT$st_d1$et_s0$flB]"
+//PUTFTP FileNameEvents$,"[$dtEV$st_d1$et_s0$ut$ut$ftT]"
+//Print "FTP Logs Sent"
+//Print "FTP Event Sent"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Send All Data
+Rem --- eWON start section: UPS_Message
+Rem --- eWON user (start)
+UPS_Message:
+IF UPS_MODE_ACTIVE@ THEN
+   
+   IF UPS_Firstpass% < 1 THEN
+      email_sent_UPS% = 1
+      UPS_Firstpass%  = 5
+   ENDIF
+   
+ 
+    IF (Acuvim_Load_Active_Power@ > 0) THEN    
+       meter_float = Acuvim_Load_Active_Power@
+   ELSE    
+       meter_float = 500//Meter_Load_Active_Power@
+   ENDIF
+   ups_time% = ((548 *0.9* (BMS_System_SOC@ / 100) * 0.9) / meter_float)*60
+   UPS_count% = UPS_count% + 1
+   
+     Print  UPS_count%
+     
+   IF BMS_System_SOC@ > 20.0 THEN  // if soc goes below 20% than send email every minutes
+      IF UPS_Count% >= 30 THEN        // 30 means 5 minutes [runs every 10 sec so 30 times is 5 minutes]
+          email_sent_UPS% = 1
+      ENDIF
+   ELSE
+      IF UPS_Count% >= 6 THEN        // 5 means 1 minutes [runs every 10 sec so 6 times is 5 minutes]
+          email_sent_UPS% = 1
+      ENDIF
+   ENDIF
+   IF email_sent_UPS% = 1 THEN    // after 5 minutes, send email out
+      M2$ = SFMT ups_time%,30,0,"%1d"  
+      M3$ = SFMT meter_float,20,4,"%f"
+  
+      SOC$ =  SFMT BMS_System_SOC@,20,4,"%f"
+  
+      M1$ = "Virtue UPS Mode Alert" + NL$ + "UPS Mode: Activated" + NP$ + "You have around "  
+      M1$ = M1$ + M2$ + " minutes of power left at the current load of " + M3$ + " kW"
+      M1$ = M1$ + NP$ + "State of Charge is: " + SOC$ + "%"
+   
+      Message$ = M1$   
+      
+      SENDMAIL E1$,E2$,"Virtue UPS Mode Alert", Message$
+       Print SOC$
+       UPS_count% = 0                // clear counter
+       email_sent_UPS% = 0
+      
+   ENDIF
+ELSE
+   email_sent_UPS% = 0
+   UPS_Firstpass%  = 0
+   UPS_count% = 0
+ENDIF
+//Print TEMP_UPS@
+
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: UPS_Message
+Rem --- eWON start section: UPS_Alert
+Rem --- eWON user (start)
+ups_alert:
+IF UPS_MODE_ACTIVE@ THEN      //  TEMP_UPS@
+  
+      M1$ = "Virtue UPS Mode ON Alert"  
+      SMS_Msg$ = "Virtue UPS Mode ON Alert"
+      Message$ = M1$   
+      
+      SENDMAIL E1$,E2$,"Virtue UPS Mode ON Alert", Message$
+      SENDSMS D$, SMS_Msg$
+     // SENDMAIL "00447554383667@sms.talk2m.com,00447795694498@sms.talk2m.com","","Virtue UPS Mode ON Alert","" 
+      
+      Print "message ON sent"
+ELSE
+      SMS_Msg$ = "Virtue UPS Mode OFF Alert"
+      M1$ = "Virtue UPS Mode OFF Alert"  
+      Message$ = M1$   
+      
+      SENDMAIL E1$,"","Virtue UPS Mode OFF Alert", Message$
+      SENDSMS D$, SMS_Msg$
+     // SENDMAIL  "00447554383667@sms.talk2m.com,00447795694498@sms.talk2m.com","","Virtue UPS Mode OFF Alert","" 
+      
+      Print "message off sent"
+ENDIF
+
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: UPS_Alert

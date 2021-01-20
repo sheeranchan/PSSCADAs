@@ -1,0 +1,832 @@
+Rem --- eWON start section: Cyclic Section
+eWON_cyclic_section:
+Rem --- eWON user (start)
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Cyclic Section
+Rem --- eWON start section: Init Section
+eWON_init_section:
+Rem --- eWON user (start)
+faults1% = 0
+faults2% = 0
+faults3% = 0
+siren_ups_flag% = 0
+siren_low_flag% = 0
+time_UPS_start% = 0
+time_UPS_current% = 0
+time_low_start% = 0
+time_low_current% = 0
+email_sent_UPS% = 0
+start_email_timer% = 0
+email_warning% = 0
+UPS_email_customer% = 0
+SoC_Limit_Low%  = 180 // 18% 
+SoC_Limit_Low_Safe% = 200 // 20%
+SoC_Limit_High% = 920 // 92% 
+SoC_Limit_High_Safe% = 900 // 90%
+Service_State% = 0
+Set_On% = 0 
+Level_Dir% = 0
+Import_ok% = 0
+Export_ok% = 0
+Import_P = 0
+Export_P = 0
+soc_dif = 0
+min_soc = 0
+max_soc = 0
+ftp_counter% = 0
+PS_ftp_flag% = 0
+NL$ = (CHR$(13)+CHR$(10))
+NP$ = NL$ + NL$   
+E1$ = "tom.csmith@powerstar.com;solon.mardapittas@powerstar.com;lee.hudson@powerstar.com;andrew.haynes@powerstar.com"
+//E2$ = ""
+E2$ = "andy.white@nmb-minebea.com;james.beaven@nmb-minebea.com;steve.essam@nmb-minebea.com;chris.bennett@nmb-minebea.com;mohammed.bhatti@nmb-minebea.com;sean.wray@nmb-minebea.com;"
+E2$ = E2$ + "paul.bedford@nmb-minebea.com"
+TSET 1,1
+TSET 2,1
+TSET 3,2
+TSET 4,5
+//ONDATE 4,"1 0 * * MON","ftp_counter% = 1"//"GOTO SendData" // Every Sunday at 11:50 PM
+ONDATE 4,"35 23 * * *","goto SendAllData"
+//ONDATE 5,"49 5 * * FRI","PS_ftp_flag% = 1" 
+//ONCHANGE "aaaa","ftp_counter% = 1"
+//ONCHANGE "EMS_System_Status","goto ups_alert"
+ONTIMER 1, "goto ups_alert"
+ONTIMER 2, "goto Email_Check"
+ONTIMER 3, "goto Faults_Calc"
+ONTIMER 4, "goto Run_service"
+ONDATE 6,"5 0 1 * *","GOTO PS_FTP" 
+ONSTATUS "goto Status"
+putFtpId% = 0
+getFtpId% = 0
+//Goto "PS_FTP"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Init Section
+Rem --- eWON start section: Faults
+Rem --- eWON user (start)
+Faults_Calc:
+// Temporary SoC Limits
+//IF ((EMS_SoC_1@ < 19) OR (EMS_SoC_2@ < 19)) THEN
+ //EMS_Power_Setpoint@ = 0
+//ENDIF
+IF ((EMS_SoC_1@ > 94) OR (EMS_SoC_2@ > 94)) THEN
+ EMS_Power_Setpoint@ = 0
+ENDIF
+// End Temporary SoC Limits
+//IF (Comms_BMS_1@ = 1) AND (Comms_BMS_2@ = 1) AND (Comms_PCS_1@ = 1) AND (Comms_PCS_2@ = 1) AND (Comms_EMS@ = 1) AND (Comms_Powerstar@ = 1) THEN
+IF (Comms_PCS_1@ = 1) AND (Comms_PCS_2@ = 1) AND (Comms_EMS@ = 1) THEN
+  faults1% = 0
+ ELSE
+  faults1% = 1  
+ENDIF
+IF( EMS_Fault_1@ OR EMS_Fault_2@ OR EMS_Fault_3@ OR EMS_Fault_4@ OR EMS_Fault_5@ OR EMS_Fault_6@ OR EMS_Fault_7@ OR EMS_Fault_8@) THEN
+  faults2% = 1
+ ELSE
+    IF (EMS_Fault_9@ OR EMS_Fault_10@ OR EMS_Fault_11@ OR EMS_Fault_12@ OR EMS_Fault_13@ OR EMS_Fault_14@ OR EMS_Fault_15@ OR EMS_Fault_16@)THEN
+      faults2% = 1
+    ELSE
+      faults2% = 0
+    ENDIF
+ENDIF
+faults3% = 0
+faults3% = faults3% + EMS_Alarm_1@
+faults3% = faults3% + EMS_Alarm_2@
+//faults3% = faults3% + EMS_Alarm_3@
+faults3% = faults3% + EMS_Alarm_4@
+faults3% = faults3% + EMS_Alarm_5@
+faults3% = faults3% + EMS_Alarm_6@
+faults3% = faults3% + EMS_Alarm_7@
+faults3% = faults3% + EMS_Alarm_8@
+faults3% = faults3% + EMS_Fault_1@
+faults3% = faults3% + EMS_Fault_2@
+faults3% = faults3% + EMS_Fault_3@
+faults3% = faults3% + EMS_Fault_4@
+faults3% = faults3% + EMS_Fault_5@
+faults3% = faults3% + EMS_Fault_6@
+faults3% = faults3% + EMS_Fault_7@
+faults3% = faults3% + EMS_Fault_8@
+faults3% = faults3% + EMS_Fault_9@
+faults3% = faults3% + EMS_Fault_10@
+faults3% = faults3% + EMS_Fault_11@
+faults3% = faults3% + EMS_Fault_12@
+faults3% = faults3% + EMS_Fault_13@
+faults3% = faults3% + EMS_Fault_14@
+faults3% = faults3% + EMS_Fault_15@
+faults3% = faults3% + EMS_Fault_16@
+faults3% = faults3% + PCS_1_Fault_1@
+faults3% = faults3% + PCS_1_Fault_2@
+faults3% = faults3% + PCS_1_Fault_3@
+faults3% = faults3% + PCS_1_Fault_4@
+faults3% = faults3% + PCS_1_Fault_5@
+faults3% = faults3% + PCS_1_Fault_6@
+faults3% = faults3% + PCS_1_Fault_7@
+faults3% = faults3% + PCS_1_Fault_8@
+faults3% = faults3% + PCS_1_Fault_9@
+faults3% = faults3% + PCS_1_Fault_10@
+faults3% = faults3% + PCS_1_Fault_11@
+faults3% = faults3% + PCS_1_Fault_12@
+faults3% = faults3% + PCS_1_Fault_13@
+faults3% = faults3% + PCS_1_Fault_14@
+faults3% = faults3% + PCS_1_Fault_15@
+faults3% = faults3% + PCS_1_Fault_16@
+faults3% = faults3% + PCS_1_Fault_17@
+faults3% = faults3% + PCS_1_Fault_18@
+faults3% = faults3% + PCS_1_Fault_19@
+faults3% = faults3% + PCS_1_Fault_20@
+faults3% = faults3% + PCS_1_Fault_21@
+faults3% = faults3% + PCS_1_Fault_22@
+faults3% = faults3% + PCS_1_Fault_23@
+faults3% = faults3% + PCS_1_Fault_24@
+faults3% = faults3% + PCS_1_Fault_25@
+faults3% = faults3% + PCS_1_Fault_26@
+faults3% = faults3% + PCS_1_Fault_27@
+faults3% = faults3% + PCS_1_Fault_28@
+faults3% = faults3% + PCS_1_Fault_29@
+faults3% = faults3% + PCS_1_Fault_30@
+faults3% = faults3% + PCS_1_Fault_31@
+faults3% = faults3% + PCS_1_Fault_32@
+faults3% = faults3% + PCS_1_Fault_33@
+faults3% = faults3% + PCS_1_Fault_34@
+faults3% = faults3% + PCS_1_Fault_35@
+faults3% = faults3% + PCS_1_Fault_36@
+faults3% = faults3% + PCS_1_Fault_37@
+faults3% = faults3% + PCS_1_Fault_38@
+faults3% = faults3% + PCS_1_Fault_39@
+faults3% = faults3% + PCS_1_Fault_40@
+faults3% = faults3% + PCS_1_Fault_41@
+faults3% = faults3% + PCS_1_Fault_42@
+faults3% = faults3% + PCS_1_Fault_43@
+faults3% = faults3% + PCS_1_Fault_44@
+faults3% = faults3% + PCS_1_Fault_45@
+faults3% = faults3% + PCS_2_Fault_1@
+faults3% = faults3% + PCS_2_Fault_2@
+faults3% = faults3% + PCS_2_Fault_3@
+faults3% = faults3% + PCS_2_Fault_4@
+faults3% = faults3% + PCS_2_Fault_5@
+faults3% = faults3% + PCS_2_Fault_6@
+faults3% = faults3% + PCS_2_Fault_7@
+faults3% = faults3% + PCS_2_Fault_8@
+faults3% = faults3% + PCS_2_Fault_9@
+faults3% = faults3% + PCS_2_Fault_10@
+faults3% = faults3% + PCS_2_Fault_11@
+faults3% = faults3% + PCS_2_Fault_12@
+faults3% = faults3% + PCS_2_Fault_13@
+faults3% = faults3% + PCS_2_Fault_14@
+faults3% = faults3% + PCS_2_Fault_15@
+faults3% = faults3% + PCS_2_Fault_16@
+faults3% = faults3% + PCS_2_Fault_17@
+faults3% = faults3% + PCS_2_Fault_18@
+faults3% = faults3% + PCS_2_Fault_19@
+faults3% = faults3% + PCS_2_Fault_20@
+faults3% = faults3% + PCS_2_Fault_21@
+faults3% = faults3% + PCS_2_Fault_22@
+faults3% = faults3% + PCS_2_Fault_23@
+faults3% = faults3% + PCS_2_Fault_24@
+faults3% = faults3% + PCS_2_Fault_25@
+faults3% = faults3% + PCS_2_Fault_26@
+faults3% = faults3% + PCS_2_Fault_27@
+faults3% = faults3% + PCS_2_Fault_28@
+faults3% = faults3% + PCS_2_Fault_29@
+faults3% = faults3% + PCS_2_Fault_30@
+faults3% = faults3% + PCS_2_Fault_31@
+faults3% = faults3% + PCS_2_Fault_32@
+faults3% = faults3% + PCS_2_Fault_33@
+faults3% = faults3% + PCS_2_Fault_34@
+faults3% = faults3% + PCS_2_Fault_35@
+faults3% = faults3% + PCS_2_Fault_36@
+faults3% = faults3% + PCS_2_Fault_37@
+faults3% = faults3% + PCS_2_Fault_38@
+faults3% = faults3% + PCS_2_Fault_39@
+faults3% = faults3% + PCS_2_Fault_40@
+faults3% = faults3% + PCS_2_Fault_41@
+faults3% = faults3% + PCS_2_Fault_42@
+faults3% = faults3% + PCS_2_Fault_43@
+faults3% = faults3% + PCS_2_Fault_44@
+faults3% = faults3% + PCS_2_Fault_45@
+IF (faults1% OR faults2% OR faults3%) THEN
+  Fault_Mem@ = 1
+ELSE
+  Fault_Mem@ = 0
+ENDIF
+ 
+Goto "FTP_Check"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Faults
+Rem --- eWON start section: UPS Check
+Rem --- eWON user (start)
+ups_alert:
+UPS_MODE@ = EMS_System_Status@#3
+  min_soc = EMS_SoC_1@
+  IF EMS_SoC_2@ < min_soc THEN
+    min_soc = EMS_SoC_2@
+  ENDIF  
+Goto "Sirens_Check"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: UPS Check
+Rem --- eWON start section: UPS_Email Check
+Rem --- eWON user (start)
+Email_Check:
+//E-MAIL Alerts
+IF UPS_MODE@ THEN
+  IF (UPS_email_customer% = 0) THEN
+    UPS_email_customer% = 1
+    @send_email_cust(UPS_email_customer%)        
+    @send_sms(UPS_email_customer%)
+  ENDIF  
+  
+  IF NOT(email_sent_UPS%) THEN
+    email_sent_UPS% = 1
+    @send_email_eng()
+  ENDIF
+  
+  IF((email_warning% = 0) AND ((EMS_SoC_1@ <= 15) OR (EMS_SoC_2@ <= 15))) THEN
+    email_warning% = 1
+    @send_warning()
+  ENDIF
+ENDIF
+IF NOT(UPS_MODE@) THEN
+    email_warning% = 0
+    email_sent_UPS% = 0
+    start_email_timer% = 0    
+    IF (UPS_email_customer% = 1) THEN
+      UPS_email_customer% = 0
+      @send_email_cust(UPS_email_customer%)   
+      @send_sms(UPS_email_customer%)
+    ENDIF
+ENDIF
+IF email_sent_UPS% THEN
+  IF start_email_timer% = 0 THEN
+    start_email_timer% = 1
+    time_save% = GETSYS PRG, "TIMESEC"
+  ENDIF
+    
+  IF start_email_timer% = 1 THEN
+    current_time% = GETSYS PRG, "TIMESEC"
+    IF ((current_time% - time_save%) >= (5 * 60)) THEN
+      start_email_timer% = 0
+      email_sent_UPS% = 0
+      @send_email_eng()
+    ENDIF
+  ENDIF
+ENDIF
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: UPS_Email Check
+Rem --- eWON start section: e-mail
+Rem --- eWON user (start)
+// 5 Minute info
+FUNCTION send_email_eng  
+  Print "Sending e-mail"
+  avg_soc = (EMS_SoC_1@ + EMS_SoC_2@) / 2
+  IF (Meter_Load_Active_Power@ > 0) THEN    
+    meter_float = Meter_Load_Active_Power@
+  ELSE    
+    meter_float = 500//Meter_Load_Active_Power@
+  ENDIF
+  ups_time% = (1056 * 60 * (avg_soc / 100) * (BMS_1_SoH@ / 100) * 0.8) / meter_float
+  M2$ = SFMT ups_time%,30,0,"%1d"  
+  M3$ = SFMT meter_float,20,4,"%f"
+  Print avg_soc
+  SOC$ =  SFMT avg_soc,20,4,"%f"
+  
+  M1$ = "Virtue UPS Mode Alert" + NL$ + "UPS Mode: Activated" + NP$ + "You have around "  
+  M1$ = M1$ + M2$ + " minutes of power left at the current load of " + M3$ + " kW"
+  M1$ = M1$ + NP$ + "State of Charge is: " + SOC$ + "%"
+   
+  Message$ = M1$   
+   
+  SENDMAIL E1$,E2$,"Virtue UPS Mode Alert", Message$
+  Print"Engineer email sent"
+ENDFN
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: e-mail
+Rem --- eWON start section: e-mail 2
+Rem --- eWON user (start)
+FUNCTION send_email_cust($ups_mode%)  
+  Mes1$ = "Virtue Customer Notification" + NP$ + "UPS "
+  Mes2$ = ""
+  IF($ups_mode% = 0) THEN
+    Mes2$ = "Deactivated. Mains Power restored"+ NP$ + "System status: Standby"
+  ELSE
+    Mes2$ = "Activated, Facility running on batteries" + NP$ + "System status: Running"
+  ENDIF  
+  
+   
+  Msg$ = Mes1$ + Mes2$ 
+  SENDMAIL E1$, E2$, "Virtue UPS Mode Alert", Msg$
+  
+  Print"Customer email sent"
+ENDFN
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: e-mail 2
+Rem --- eWON start section: SMS Messages
+Rem --- eWON user (start)
+FUNCTION send_sms($ups_mode%)  
+  //D$ = "00447515939629,gsm,00447785016005"
+  D$ = "00447515939629,gsm,00447785016005;00447971798368,gsm,00447785016005;00447970609048,gsm,00447785016005;"
+  D$ = D$ + "00447971798357,gsm,00447785016005;00447971798344,gsm,00447785016005;00447824311748,gsm,00447785016005;00447971798358,gsm,00447785016005;"
+  D$ = D$ + "00447751793308,gsm,00447785016005;00447971798364,gsm,00447785016005"
+  SMS_Msg$ = "NMB Virtue UPS: "
+  IF($ups_mode% = 0) THEN
+    SMS_Msg$ = SMS_Msg$ + "Deactivated"
+  ELSE
+    SMS_Msg$ = SMS_Msg$ + "Activated"
+  ENDIF
+  SENDSMS D$, SMS_Msg$
+  Print "SMS Sent"  
+ENDFN
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: SMS Messages
+Rem --- eWON start section: E-mail Critical
+Rem --- eWON user (start)
+// Critical Battery Warning
+FUNCTION send_warning()     
+  SOC$ =  SFMT min_soc,20,4,"%f" 
+  
+  M1$ = "Virtue UPS Mode Alert" + NL$ + "Battery Low Warning" + NP$   
+  M1$ = M1$ + NP$ + "State of Charge is: " + SOC$ + "%"   
+  MW$ = "Recommended Action: Shut down critical applications"
+  M1$ = M1$ + NP$ + MW$
+  Message$ = M1$  
+ 
+ SENDMAIL E1$,E2$, "Virtue UPS CRITICAL BATTERY WARNING", Message$
+  Print"15% Warning email sent"
+ENDFN
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: E-mail Critical
+Rem --- eWON start section: FTP Check
+Rem --- eWON user (start)
+FTP_Check:
+IF ftp_counter% > 0 THEN
+  IF ftp_counter% > 7 THEN
+    ftp_counter% = 0
+  ELSE    
+    ftp_counter% = ftp_counter% + 1
+    Print "FTP Count: ";
+    Print ftp_counter%
+    Goto SendData
+    
+  ENDIF
+ENDIF
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: FTP Check
+Rem --- eWON start section: FTP Send
+Rem --- eWON user (start)
+SendData:
+T$ = Time$
+year$ = T$(7 To 10)
+mon$ = T$(4 To 5)
+date$ = T$(1 To 2)
+hour$ = T$(12 To 13)
+min$ = T$(15 To 16)
+sec$ = T$(18 To 19)
+IF ftp_counter% = 2 THEN
+  File1$ = "NMB/SoC_1-" + date$ + "-" + mon$ + "-" + year$ + ".csv"
+  PUTFTP File1$,"[$dtHL $ftT $st_d7 $et_s0 $tnEMS_SoC_1]"
+  Print "FTP 1"
+ENDIF
+IF ftp_counter% = 3 THEN
+  File2$ = "NMB/SoC_2-" + date$ + "-" + mon$ + "-" + year$ + ".csv"
+  PUTFTP File2$,"[$dtHL $ftT $st_d7 $et_s0 $tnEMS_SoC_2]"
+  Print "FTP 2"
+ENDIF
+IF ftp_counter% = 4 THEN
+  File7$ = "NMB/PCS_Act_P-" + date$ + "-" + mon$ + "-" + year$ + ".csv"
+  PUTFTP File7$,"[$dtHL $ftT $st_d7 $et_s0 $tnMeter_PCS_Active_Power]"
+  Print "FTP 3"
+ENDIF 	
+IF ftp_counter% = 5 THEN
+  File4$ = "NMB/Meter_Supply_Vph1-" + date$ + "-" + mon$ + "-" + year$ + ".csv"
+  PUTFTP File4$,"[$dtHL $ftT $st_d7 $et_s0 $tnMeter_Supply_Vph1]"
+  Print "FTP 4"
+ENDIF
+IF ftp_counter% = 6 THEN
+  File5$ = "NMB/Meter_Supply_Act_Power-" + date$ + "-" + mon$ + "-" + year$ + ".csv"
+  PUTFTP File5$,"[$dtHL $ftT $st_d7 $et_s0 $tnMeter_Supply_Active_Power]"
+  Print "FTP 5"
+ENDIF
+IF ftp_counter% = 7 THEN
+  File6$ = "NMB/Meter_Load_Act_Power-" + date$ + "-" + mon$ + "-" + year$ + ".csv"
+  PUTFTP File6$,"[$dtHL $ftT $st_d7 $et_s0 $tnMeter_Load_Active_Power]"
+  Print "FTP 6"
+ENDIF
+SendAllData:
+T$ = Time$
+year$ = T$(7 To 10)
+mon$ = T$(4 To 5)
+date$ = T$(1 To 2)
+hour$ = T$(12 To 13)
+min$ = T$(15 To 16)
+sec$ = T$(18 To 19)
+  
+FileNameLogs$ =  "NMB/Weekly_Logs-" + year$ + "-" + mon$ + "-" + date$ + ".csv"
+FileNameEvents$ = "NMB/Weekly_Events-" + year$ + "-" + mon$ + "-" + date$ + ".csv"
+PUTFTP FileNameLogs$,"[$dtHT$ftT$st_d1$et_s0$flB]"
+PUTFTP FileNameEvents$,"[$dtEV$st_d1$et_s0$ut$ut$ftT]"
+Print "FTP Logs Sent"
+Print "FTP Event Sent"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: FTP Send
+Rem --- eWON start section: Sirens
+Rem --- eWON user (start)
+Sirens_Check:
+IF UPS_MODE@ THEN
+  IF siren_ups_flag% = 0 THEN
+    siren_ups_flag% = 1
+    Siren_UPS@ = 1
+    Print "Siren UPS On"
+    time_UPS_start% = GETSYS PRG, "TIMESEC"   
+  ENDIF
+  
+  IF siren_ups_flag% = 1 THEN
+    time_UPS_current% = GETSYS PRG, "TIMESEC"   
+    IF ((time_UPS_current% - time_UPS_start%) > 60) THEN     
+       siren_ups_flag% = 2
+       Siren_UPS@ = 0
+       Print "Siren UPS Off 60s"
+    ENDIF
+  ENDIF
+  
+  IF ((min_soc < 15.0) AND (siren_ups_flag% = 2)) THEN
+    IF siren_low_flag% = 0 THEN
+      siren_low_flag% = 1
+      Siren_Low_Batt@ = 1
+      Print "Siren Low On"
+      time_low_start% = GETSYS PRG, "TIMESEC"
+    ENDIF
+    
+    IF siren_low_flag% = 1 THEN
+      time_low_current% = GETSYS PRG, "TIMESEC"
+      IF ((time_low_current% - time_low_start%) > 60) THEN     
+        siren_low_flag% = 2
+        Siren_Low_Batt@ = 0
+        Print "Siren Low Off 60s"
+      ENDIF
+    ENDIF     
+  ENDIF
+  
+ELSE
+  Siren_Low_Batt@ = 0
+  Siren_UPS@ = 0
+  
+  siren_ups_flag% = 0
+  siren_low_flag% = 0
+ 
+  time_UPS_start% = 0
+  time_UPS_current% = 0
+  time_low_start% = 0
+  time_low_current% = 0
+ENDIF
+  
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Sirens
+Rem --- eWON start section: Month String
+Rem --- eWON user (start)
+FUNCTION get_month$($month_v%)  
+  IF $month_v% = 1 Then
+    $get_month$ = "Jan"
+  ENDIF
+  IF $month_v% = 2 Then
+    $get_month$ = "Feb"
+  ENDIF
+  IF $month_v% = 3 Then
+    $get_month$ = "Mar"
+  ENDIF
+  IF $month_v% = 4 Then
+    $get_month$ = "Apr"
+  ENDIF
+  IF $month_v% = 5 Then
+    $get_month$ = "May"
+  ENDIF
+  IF $month_v% = 6 Then
+    $get_month$ = "Jun"
+  ENDIF
+  IF $month_v% = 7 Then
+    $get_month$ = "Jul"
+  ENDIF
+  IF $month_v% = 8 Then
+    $get_month$ = "Aug"
+  ENDIF
+  IF $month_v% = 9 Then
+    $get_month$ = "Sep"
+  ENDIF
+  IF $month_v% = 10 Then
+    $get_month$ = "Oct"
+  ENDIF
+  IF $month_v% = 11 Then
+    $get_month$ = "Nov"
+  ENDIF
+  IF $month_v% = 12 Then
+    $get_month$ = "Dec"
+  ENDIF  
+Return 
+ENDFN
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Month String
+Rem --- eWON start section: PS FTP
+Rem --- eWON user (start)
+PS_FTP:
+  Site$ = "NMB"
+  Print "start"
+  T$ = Time$
+  year$ = T$(7 To 10)
+  year_int% = Val(year$)  
+  month_val% =  MONTH T$
+  month_val% = month_val% - 1
+  IF month_val% < 1 Then
+    month_val% = 12
+    year_int% = year_int% - 1    
+    year$ = SFMT year_int%,30,0,"%1d"
+  ENDIF
+  FileName$ = "Basic" + year$ + @get_month$(month_val%)  + ".csv"
+  HMI_File$ = "/StorageCard/data/" + FileName$
+  ewon_store_fn$ = "/usr/" + FileName$
+  ewonDir$ = "[$dtUF $uf/" + FileName$ + "]"
+  ftpDir$ = Site$ + "/PS/" + FileName$
+  GETFTP HMI_File$,ewon_store_fn$,":@10.0.33.15"
+  getFtpId% = GETSYS PRG,"ACTIONID"
+  
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: PS FTP
+Rem --- eWON start section: status
+Rem --- eWON user (start)
+status:
+eventId% = GETSYS PRG,"ACTIONID"
+IF eventId% = getFtpId% THEN
+  stat% = GETSYS PRG, "ACTIONSTAT"
+  If stat% = 0 Then
+    Print "put ftp"
+    PUTFTP ftpDir$, ewonDir$
+    putFtpId% = GETSYS PRG,"ACTIONID"
+  ENDIF
+ENDIF
+IF eventId% = putFtpId% THEN
+  stat% = GETSYS PRG, "ACTIONSTAT"
+  If stat% = 0 Then
+    Print "erase"    
+    ERASE ewon_store_fn$
+  ENDIF
+ENDIF
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: status
+Rem --- eWON start section: Run Service
+Rem --- eWON user (start)
+Run_service:
+// workout min and max SOC
+min_soc = EMS_SoC_1@
+IF EMS_SoC_2@ < min_soc THEN
+   min_soc = EMS_SoC_2@
+ENDIF 
+	
+max_soc = EMS_SoC_1@
+IF EMS_SoC_2@ > max_soc THEN
+   max_soc = EMS_SoC_2@
+ENDIF 
+// Calculate import/export 
+Import_P = 900.0 - Meter_Load_Active_Power@     // MAX import power
+IF Meter_Load_Active_Power@ < 473 Then          // MAX export power
+   Export_P = Meter_Load_Active_Power@
+ELSE
+   Export_P = 473
+ENDIf
+// import export status
+If Import_P > 100 Then 
+    Import_ok% = 1
+Else
+    Import_ok% = 0
+ENDIF
+    
+If Export_P > 250 Then 
+    Export_ok% = 1
+Else
+    Export_ok% = 0
+ENDIF
+// Limit charge or discharge at soc limit level
+IF (min_soc < 18.0) AND (EMS_SOC_Low@ =0) THEN		
+			EMS_SOC_Low@ = 1	
+			EMS_SOC_Ok@ = 0  // No running service... l.e
+      IF Import_ok%= 1 THEN
+			   EMS_Power_Setpoint@  = -1000
+      ELSE
+         IF Import_P > 0 THEN
+            EMS_Power_Setpoint@  = -10*Import_P
+         ELSE
+            EMS_Power_Setpoint@  = 0
+         ENDIF
+      ENDIF
+ENDIF
+IF (min_soc >= 20.0) AND (EMS_SOC_Low@ = 1) THEN		
+			EMS_SOC_Low@ = 0	
+			EMS_SOC_Ok@ = 1  // No running service... l.e
+			EMS_Power_Setpoint@  = 0
+ENDIF
+ 
+IF (max_soc > 92.0) AND (EMS_SOC_High@ = 0) THEN		
+			EMS_SOC_High@ = 1	
+			EMS_SOC_Ok@ = 0  // No running service... l.e
+			EMS_Power_Setpoint@  = 1000
+ENDIF
+IF (max_soc <= 90.0) AND (EMS_SOC_High@ = 1) THEN		
+			EMS_SOC_High@ = 0	
+			EMS_SOC_Ok@ = 1  // No running service... l.e
+			EMS_Power_Setpoint@  = 0
+ENDIF
+IF (max_soc < 90.0) AND (min_soc > 20.0) THEN		
+			EMS_SOC_High@ = 0
+      EMS_SOC_Low@ = 0
+			EMS_SOC_Ok@ = 1  // No running service... l.e
+ENDIF
+// Determin DUoS red, amber and Green window
+IF (EMS_Time_H@ >= 7) AND (EMS_Time_H@ < 16) THEN 
+	 Service_State%     = 1            // morning amber window
+ENDIF
+IF (EMS_Time_H@ >= 16) AND (EMS_Time_H@ < 19) THEN
+	 Service_State%     = 2           // red window
+ENDIF  
+IF (EMS_Time_H@ >= 19) AND (EMS_Time_H@ < 21) THEN
+	 Service_State%     = 3          // evening amber window
+ENDIF
+IF (EMS_Time_H@ >= 21) OR (EMS_Time_H@ < 7) THEN
+	 Service_State%     = 4         // green window
+ENDIF
+   //
+IF (EMS_SOC_Ok@ = 1) AND (UPS_MODE@ = 0) THEN          // if soc within correct level and not UPS...
+   IF Service_State% = 1 THEN            // if it's in the morning amber window....
+      soc_dif= max_soc - min_soc         // calculate soc difference
+      soc_dif= soc_dif/min_soc
+      soc_dif= soc_dif * 100 
+   
+      IF soc_dif >= 5.0 THEN                               // if difference is greater or equal to 5% than...
+          IF (max_soc >= 90.0) THEN       // if highest soc greater that 90%, discharge at 100kw
+			        If  Export_ok% = 1 THEN          // limit to export power
+                  EMS_Power_Setpoint@  = 1000   
+              ELSE
+                  EMS_Power_Setpoint@  = 0 
+              ENDIF
+				         Level_Dir% = 1
+          ELSE
+              IF (max_soc <= 80.0) THEN                // check highest soc, if below 80% than charge at 100KW	
+			           If Import_ok% = 1 THEN          // limit to import power
+			              EMS_Power_Setpoint@  = -1000
+                 ELSE
+                    IF Import_P > 0 THEN
+                       EMS_Power_Setpoint@  = -10*Import_P
+                    ELSE
+                       EMS_Power_Setpoint@  = 0
+                    ENDIF
+                 ENDIF
+  
+				          Level_Dir% = 0	
+			        ELSE                                               // else, continiou with direction set until limit is reached.
+				          IF Level_Dir% = 1 THEN
+                  	 If  Export_ok% = 1 THEN          // limit to import power
+                         EMS_Power_Setpoint@  = 1000   
+                     ELSE
+                         EMS_Power_Setpoint@  = 0 
+                     ENDIF  
+                  ELSE
+                  	 IF Import_ok%= 1 THEN
+			                  EMS_Power_Setpoint@  = -1000
+                     ELSE
+                        IF Import_P > 0 THEN
+                            EMS_Power_Setpoint@  = -10*Import_P
+                        ELSE
+                            EMS_Power_Setpoint@  = 0
+                        ENDIF
+                     ENDIF  
+                  ENDIF  	
+			        ENDIF
+          ENDIF
+		   ELSE                                                   // if within 5% bounderay...
+		      IF (max_soc < 88.0) THEN               // if soc is below safe limit high, charge and be ready fo DUoS
+			       IF Import_ok%= 1 THEN
+			          EMS_Power_Setpoint@  = -1000
+             ELSE
+                IF Import_P > 0 THEN
+                   EMS_Power_Setpoint@  = -10*Import_P
+                ELSE
+                   EMS_Power_Setpoint@  = 0
+                ENDIF
+             ENDIF
+          ELSE                                               // else do nothing
+			       EMS_Power_Setpoint@  = 0	
+		      ENDIF 	
+		   ENDIF  
+		   Set_On%   = 0                             // Clear Set flag ready for DUoS at 16h30
+   ENDIF
+   //
+   
+  If Service_State% = 2 THEN        // 16h00 ready for DUoS discharge
+	   IF ((EMS_Time_H@ = 16) AND (EMS_Time_min@ > 30)) OR (EMS_Time_H@ >= 17) THEN                   // Start discharge at 16h30
+		    Set_On%   = 1
+	   ENDIF
+	   IF  Set_On% THEN	     
+		    IF  (min_soc >= 20.0) THEN    // check low limit is not breach and discharge at 250KW		
+			     If Export_ok% = 1 THEN          // limit to export power
+             EMS_Power_Setpoint@  = 3000   
+           ELSE
+              EMS_Power_Setpoint@  = 0 
+           ENDIF   
+		    ELSE
+			      EMS_Power_Setpoint@  = 0 
+            Set_On% = 0	
+		    ENDIF
+	   ENDIF
+  ENDIF
+  //
+  
+   IF Service_State% = 3 THEN            // if it's in the evening amber window....
+      soc_dif= max_soc - min_soc         // calculate soc difference
+      soc_dif= soc_dif/min_soc
+      soc_dif= soc_dif * 100 
+      
+      IF soc_dif >= 5.0 THEN                               // if difference is greater or equal to 5% than...
+          IF (min_soc >= 30.0) THEN       // if lowest soc greater that 30%, discharge at 100kw
+			        If  Export_ok% = 1 THEN          // limit to export power
+                 EMS_Power_Setpoint@  = 1000   
+              ELSE
+                 EMS_Power_Setpoint@  = 0 
+              ENDIF
+				         Level_Dir% = 1
+          ELSE
+              IF (max_soc <= 20.0) THEN                // check lowest soc, if below 280% than charge at 100KW	
+			           IF Import_ok%= 1 THEN
+			              EMS_Power_Setpoint@  = -1000
+                 ELSE
+                    IF Import_P > 0 THEN
+                       EMS_Power_Setpoint@  = -10*Import_P
+                    ELSE
+                        EMS_Power_Setpoint@  = 0
+                    ENDIF
+                 ENDIF
+				          Level_Dir% = 0	
+			        ELSE                                               // else, continiou with direction set until limit is reached.
+				          IF Level_Dir% = 1 THEN
+                  	 If  Export_ok% = 1 THEN          // limit to import power
+                         EMS_Power_Setpoint@  = 1000   
+                     ELSE
+                         EMS_Power_Setpoint@  = 0 
+                     ENDIF  
+                  ELSE
+                  	 IF Import_ok%= 1 THEN
+			                   EMS_Power_Setpoint@  = -1000
+                     ELSE
+                        IF Import_P > 0 THEN
+                           EMS_Power_Setpoint@  = -10*Import_P
+                        ELSE
+                           EMS_Power_Setpoint@  = 0
+                        ENDIF
+                     ENDIF 
+                  ENDIF  	
+			        ENDIF
+          ENDIF
+		   ELSE                                                   // if within 5% bounderay...
+			    EMS_Power_Setpoint@  = 0	          // else do nothing
+		   ENDIF  
+		   Set_On%   = 0                             // Clear Set flag ready for DUoS at 16h30
+   ENDIF
+	
+ 
+  If Service_State% = 4 THEN        // 16h00 ready for DUoS discharge
+	   IF (EMS_Time_H@ = 22)  THEN                   // Start charge at 22h00
+		    Set_On%   = 1
+	   ENDIF
+	   IF  Set_On% THEN	     
+		    IF (max_soc <= 90.0) THEN    // check low limit is not breach and charge at 100KW		
+			     IF Import_ok%= 1 THEN
+			        EMS_Power_Setpoint@  = -1000
+           ELSE
+              IF Import_P > 0 THEN
+                 EMS_Power_Setpoint@  = -10*Import_P
+              ELSE
+                 EMS_Power_Setpoint@  = 0
+              ENDIF
+           ENDIF  
+		    ELSE
+			      EMS_Power_Setpoint@  = 0 
+            Set_On% = 0	
+		    ENDIF
+	   ENDIF
+  ENDIF
+ENDIF
+//Print Service_State%
+Print min_soc
+Print Service_State%
+Print  Export_ok%
+Print EMS_Power_Setpoint@
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Run Service

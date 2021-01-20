@@ -1,0 +1,60 @@
+Rem --- eWON start section: Cyclic Section
+eWON_cyclic_section:
+Rem --- eWON user (start)
+IF(PLC_PCS_Work_Status@ = 1) THEN
+ENDIF
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Cyclic Section
+Rem --- eWON start section: Init Section
+eWON_init_section:
+Rem --- eWON user (start)
+Init:
+fire_mode% = 0
+already_sent% = 0
+TSET 1, 60
+TSET 2, 3600
+ONTIMER 1, "Goto Email_BMS_MAx_Percent"
+ONTIMER 2, "Goto resetFlag"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Init Section
+Rem --- eWON start section: Check_SoC
+Rem --- eWON user (start)
+Email_BMS_MAx_Percent:
+IF (BMS_System_SOC@) > 96 And (already_sent = 0) THEN
+    //send email
+    fire_mode% = 1
+    send_email_fire(fire_mode%)
+    already_sent = 1
+ELSE
+    fire_mode% = 0
+ENDIF 
+FUNCTION send_email_fire($fire_mode%)  
+  Mes1$ = "Please note that Data Centre System SoC drifting too high "
+  Mes2$ = ""
+  Subject$ = ""
+  IF($fire_mode% = 0) THEN
+    Mes2$ = "Normal"
+    Subject$ = "Virtue SoC is running normally"
+  ELSE
+    Mes2$ = "(Warning)"
+    Subject$ = "Virtue Data Centre: SoC drifting too high"
+  ENDIF  
+  
+  Msg$ = Mes1$ + Mes2$
+  Print Msg$
+  
+  SENDMAIL FireList$,"", Subject$, Msg$
+  Print"Fire email 1 sent"
+ENDFN 
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Check_SoC
+Rem --- eWON start section: reset_flag
+Rem --- eWON user (start)
+resetFlag:
+already_sent = 0
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: reset_flag

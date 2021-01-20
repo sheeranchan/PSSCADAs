@@ -1,0 +1,67 @@
+Rem --- eWON start section: Cyclic Section
+eWON_cyclic_section:
+Rem --- eWON user (start)
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Cyclic Section
+Rem --- eWON start section: Init Section
+eWON_init_section:
+Rem --- eWON user (start)
+TSET 1, 30
+ONTIMER 1, "GOTO request"
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Init Section
+Rem --- eWON start section: Fetch-3rd-party-data
+Rem --- eWON user (start)
+request:
+GETFTP "/home/powerstar/ftp/files/DM/DM-Response.txt", "/usr/3rd-party-data.txt","powerstar:ps236525**@94.237.60.60:21,1"
+actionID% = GETSYS PRG, "ACTIONID"
+PRINT "request action id is "; actionID%
+ONSTATUS "GOTO onEvent"
+END
+
+onEvent:
+eventId% = GETSYS PRG, "EVTINFO"
+PRINT "event id is "; eventId%
+IF (eventId% = actionID%) THEN
+  SETSYS PRG, "ACTIONID", eventId%
+  stat% = GETSYS PRG, "ACTIONSTAT"
+  Print "stats is: "; stat%
+    IF (stat% = 0) THEN
+      GOTO response
+    ELSE
+      PRINT "Error (ERROR = "+Str$(stat%) + ")"
+    ENDIF
+ENDIF
+END
+
+response:
+PRINT "open file"
+OPEN "file:/usr/3rd-party-data.txt" FOR BINARY INPUT AS 1
+Line$ = ""
+Myvalue$ = ""
+
+ReadNext:
+IF EOF 1 THEN GOTO ReadDone
+CHAR$ = GET 1,10
+PRINT CHAR$
+  //IF CHAR$ = CHR$(10) THEN
+  // PRINT Line$
+   //PROCESS LINE
+    //Pos% = INSTR 1, Line$, "name"
+    //IF Pos% <> 0 THEN
+    //  Myvalue$ = Line$(Pos%+9 To Pos%+14)
+    //  PRINT Myvalue$ //output string value - 
+  // ENDIF
+ELSE
+ Line$ = Line$ + CHAR$
+ENDIF
+GOTO ReadNext
+
+ReadDone:
+PRINT "close file"
+CLOSE 1
+Rem --- eWON user (end)
+End
+Rem --- eWON end section: Fetch-3rd-party-data
